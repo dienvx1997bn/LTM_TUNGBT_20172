@@ -243,14 +243,7 @@ int findIndex(SOCKET s) {
 // process if msgType is userID message
 // idx index of this session
 // return 1 if no error, else return 0
-int processUserID(SOCKET connSock, int idx, char *data, char *out) {
-
-	if (checkSessionConnected(connSock) == 1) {
-		memcpy(out, "-41", 3);
-	}
-
-	sess[idx].connSock = connSock;
-
+int processUserID(int idx, char *data, char *out) {
 
 	if (checkAvailUserID(data) == 1)//have user in database
 	{
@@ -290,7 +283,7 @@ int processUserID(SOCKET connSock, int idx, char *data, char *out) {
 //process if PassWord message
 // return 1 if no error, else return 0
 // idx index of this session
-int processPass(SOCKET connSock, int idx, char *data, char *out) {
+int processPass(int idx, char *data, char *out) {
 
 	if (strcmp(currentUser[idx].data.passWord, data) == 0) {				//if password true
 
@@ -329,7 +322,7 @@ int processPass(SOCKET connSock, int idx, char *data, char *out) {
 //process if logout message
 // return 1 if no error, else return 0
 // idx index of this session
-int processLogOut(SOCKET connSock, int idx, char *data, char *out) {
+int processLogOut(int idx, char *data, char *out) {
 
 	if (sess[idx].sessionStatus == 2) {
 		if (strcmp(data, "yes") == 0)		//msg logout
@@ -359,22 +352,29 @@ int  process(SOCKET connSock, int idx, char buff[], char *out) {
 	extractInformation(buff, &msg);
 
 	msg.data[msg.length] = '\0';
-	printf(" type %d length %d data %s", msg.msgType, msg.length, msg.data);
+	printf("receive from socket %d :  type %d length %d data %s\n", connSock, msg.msgType, msg.length, msg.data);
 	
 	if (sess[idx].sessionStatus == 0) {
-		if (msg.msgType == 1)
-			processUserID(connSock, idx, msg.data, out);
+		if (msg.msgType == 1) {
+			if (checkSessionConnected(connSock) == 1) {
+				memcpy(out, "-41", 3);
+			}
+			else {
+				sess[idx].connSock = connSock;
+				processUserID(idx, msg.data, out);
+			}
+		}
 		else memcpy(out, "-10", 3);
 	}
 	else if (sess[idx].sessionStatus == 1) {
 		if (msg.msgType == 2)
-			processPass(connSock, idx, msg.data, out);
+			processPass(idx, msg.data, out);
 		
 		else memcpy(out, "-10", 3);
 	} 
 	else if (sess[idx].sessionStatus == 2) {
 		if (msg.msgType == 3)
-			processLogOut(connSock, idx, msg.data, out);
+			processLogOut(idx, msg.data, out);
 		else memcpy(out, "-10", 3);
 	}
 	else //message type can not identified

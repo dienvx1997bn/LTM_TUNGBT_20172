@@ -1,4 +1,5 @@
-﻿  Client.cpp
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\client\client.cpp(112): warning C4715: 'isError': not all control paths return a value
-  Client.vcxproj -> C:\Users\dienv\Desktop\LTM_TUNGBT_20172\Sources\Server\Debug\Client.exe
-  Client.vcxproj -> C:\Users\dienv\Desktop\LTM_TUNGBT_20172\Sources\Server\Debug\Client.pdb (Full PDB)
+﻿C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(392,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (Client.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  Client_demo.cpp
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\client\client_demo.cpp(112): warning C4715: 'isError': not all control paths return a value
+  Client.vcxproj -> C:\Users\dienv\Desktop\LTM_TUNGBT_20172\Sources\Server\Debug\Client_demo.exe
+  Client.vcxproj -> C:\Users\dienv\Desktop\LTM_TUNGBT_20172\Sources\Server\Debug\Client_demo.pdb (Full PDB)

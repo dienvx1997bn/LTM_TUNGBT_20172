@@ -191,7 +191,7 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 			perIoData->operation = SEND;
 
 			process(perHandleData->socket, idx, perIoData->buffer, result);
-			printf("\nresult %s\n", result);
+			//printf("\socket %d   result %s\n",perHandleData->socket, result);
 		}
 		else if (perIoData->operation == SEND) {
 			perIoData->sentBytes += transferredBytes;
@@ -218,6 +218,7 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 					return 0;
 				}
 			}
+			printf("\socket %d   result %s\n", perHandleData->socket, result);
 		}
 		else {
 			// No more bytes to send post another WSARecv() request
