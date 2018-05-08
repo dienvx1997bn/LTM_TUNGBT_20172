@@ -13,7 +13,7 @@ public class EchoClient {
 
     public static int DATA_BUFSIZE = 2048;
     public static void main(String[] args) throws IOException {
-        //Map map = new Map();
+//        //Map map = new Map();
         LogIn login = new LogIn();
 
         //thread show GUI form
@@ -21,7 +21,6 @@ public class EchoClient {
             @Override
             public void run() {
                 login.run();
-
             }
 
         });
