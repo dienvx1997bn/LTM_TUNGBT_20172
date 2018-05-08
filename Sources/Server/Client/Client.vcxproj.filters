@@ -15,7 +15,11 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+<<<<<<< HEAD
     <ClCompile Include="Client_demo.cpp">
+=======
+    <ClCompile Include="Client_c.cpp">
+>>>>>>> origin/client_demo
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -6,7 +6,7 @@ import javax.swing.*;
 import java.awt.*;
 
 public class Map {
-    public static void main(String[] args) {
+    public void run() {
         Browser browser = new Browser();
         BrowserView view = new BrowserView(browser);
 

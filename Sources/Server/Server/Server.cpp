@@ -10,7 +10,7 @@
 
 #pragma comment(lib, "Ws2_32.lib")
 
-#define DATA_BUFSIZE 8192
+#define DATA_BUFSIZE 2048
 #define RECEIVE 0
 #define SEND 1
 #define BUFF_SIZE_RESULT 3

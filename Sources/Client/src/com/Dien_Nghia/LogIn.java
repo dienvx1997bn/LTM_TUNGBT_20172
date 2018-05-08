@@ -25,9 +25,10 @@ import java.awt.Dialog.ModalExclusionType;
 import javax.swing.border.BevelBorder;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionAdapter;
 
-class LogIn extends JFrame {
+public class LogIn extends JFrame {
 
 	private JPanel pLogin;
 	private JPasswordField passwordField;
@@ -37,23 +38,18 @@ class LogIn extends JFrame {
 	/**
 	 * Launch the application.
 	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					LogIn frame = new LogIn();
-					frame.setTitle("Log In");
-					frame.setUndecorated(true);
-					frame.setLocationRelativeTo(null);
-					frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
+	
+	public void run() {
+		try {
+			LogIn frame = new LogIn();
+			frame.setTitle("Log In");
+			frame.setUndecorated(true);
+			frame.setLocationRelativeTo(null);
+			frame.setVisible(true);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
-	
-	
 
 	/**
 	 * Create the frame.
@@ -90,6 +86,42 @@ class LogIn extends JFrame {
 		btnLogin.setFont(new Font("Harlow Solid Italic", Font.BOLD, 20));
 		btnLogin.setBackground(new Color(32, 178, 170));
 		btnLogin.setBounds(458, 432, 393, 44);
+		btnLogin.addMouseListener(new MouseListener() {
+			
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mousePressed(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseExited(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				// TODO Auto-generated method stub
+				Map map = new Map();
+				map.run();
+				setVisible(false);
+				
+			}
+		});
+		
 		pLogin.add(btnLogin);
 		
 		JLabel lblUsername = new JLabel("USERNAME");

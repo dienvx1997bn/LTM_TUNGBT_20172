@@ -23,7 +23,11 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>Client</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+<<<<<<< HEAD
     <ProjectName>Client_demo</ProjectName>
+=======
+    <ProjectName>Client_c</ProjectName>
+>>>>>>> origin/client_demo
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -147,7 +151,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+<<<<<<< HEAD
     <ClCompile Include="Client_demo.cpp" />
+=======
+    <ClCompile Include="Client_c.cpp" />
+>>>>>>> origin/client_demo
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
