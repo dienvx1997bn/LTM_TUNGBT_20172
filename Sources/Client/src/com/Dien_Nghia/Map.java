@@ -18,7 +18,7 @@ public class Map {
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);        
 
-        browser.loadURL("src/images/map.html");
+        browser.loadURL("src/resource/map.html");
         browser.getFullScreenHandler();
     }
     
