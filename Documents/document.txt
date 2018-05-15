@@ -1,16 +1,11 @@
 
 /*design protocol
-     +---------+----------------------------------+------------------------------------------------------------------------+-------------------+
+     +-------+------------------------------------+------------------------------------------------------------------------+-------------------+
      |  STT    |    Command                       |    Return message                                                      |    Note           |
      +---------+----------------------------------+------------------------------------------------------------------------+-------------------+
-     |    0    |    XYZT                          |    -10: Unidentified message. Please check again.                      |                   |
-     |         |                                  |    -20: Protocol sequence is incorrect. Please check again.            |                   |
-     +---------+----------------------------------+------------------------------------------------------------------------+-------------------+
      |    1    |    USER <userID>                 |    +01: Username is correct. Please send your password.                |    Username       |
-     |         |                                  |    -21: Username is incorrect. Please check again.      			   |				   |
-     |		   |								  |    -11: user blocked												   |				   |
-     |		   |								  |	   -31: user was already connected									   |				   |
-     |		   |								  |	   -41:client connected before										   |				   |		+---------+----------------------------------+------------------------------------------------------------------------+-------------------+
+     |         |                                  |    -11: Username is incorrect. Please check again.          
+     +---------+----------------------------------+------------------------------------------------------------------------+-------------------+
      |    2    |    PASS <password>               |    +02: Password is correct. Log in succecssfully.                     |    Password       |
      |         |                                  |    -12: Password is incorrect. Please check again.                     |                   |
      +---------+----------------------------------+------------------------------------------------------------------------+-------------------+ 
@@ -18,21 +13,23 @@
      |         |                                  |    -13: Account isn't logged in.                                       |                   |
      |         |                                  |         Please log in before doing that.                               |                   |
      +---------+----------------------------------+------------------------------------------------------------------------+-------------------+
-     |    4    |    ADDP -n "name"	              |    +04: Added place to your favorite places list.                      |    Add place      |
-     |         |         lat %f lng %f 		      |    -14: This place was in your favorite places list.                   |                   |
+     |    4    |    ADDP <placename>              |    +04: Added place to your favorite places list.                      |    Add place      |
+     |         |         <type> <location>        |    -14: This place was in your favorite places list.                   |                   |
      |         |                                  |         Please add another place.                                      |                   |
-     |         |                                  |    -24: This place isnâ€™t in the map. Please check again.               |                   |
+     |         |                                  |    -24: This place isn’t in the map. Please check again.               |                   |
      +---------+----------------------------------+------------------------------------------------------------------------+-------------------+ 
      |    5    |    LIST                          |    +05: Your favorite places list.                                     |    List places    |
      +---------+----------------------------------+------------------------------------------------------------------------+-------------------+
      |    6    |    LIFR                          |    +06: Your friends.                                                  |    List friends   |
      +---------+----------------------------------+------------------------------------------------------------------------+-------------------+
-     |    7    |    TAGF <username> <place>		  |    +07: Tag successfully                                               |    Tag friends    |
-     |         |                                  |    -17: Placename isnâ€™t in your places list.                           |                   |
-     |         |                                  |    -27: Placename isnâ€™t in the map. Please check again.                |                   |
+     |    7    |    TAGF <username> <placename>   |    +07: Tag successfully                                               |    Tag friends    |
+     |         |                                  |    -17: Placename isn’t in your places list.                           |                   |
+     |         |                                  |    -27: Placename isn’t in the map. Please check again.                |                   |
      +---------+----------------------------------+------------------------------------------------------------------------+-------------------+ 
-     |    8    |    NOTI <username> <place>	      |    +08: Receive ok                                                     |                   |
-    
+     |    8    |    NOTI <username> <placename>   |    +08: Receive ok                                                     |                   |
+     +---------+----------------------------------+------------------------------------------------------------------------+-------------------+
+     |    9    |    XYZT                          |    -19: Unidentified message. Please check again.                      |                   |
+     |         |                                  |    -29: Protocol sequence is incorrect. Please check again.            |                   |
      +---------+----------------------------------+------------------------------------------------------------------------+-------------------+
 */
 
@@ -84,6 +81,4 @@ struct message_share_place {
 	struct place place;
 
 }
-
-
 
