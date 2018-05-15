@@ -1,16 +1,7 @@
 #pragma once
-#include <winsock2.h>
+#include "place.h"
 
-#define USER 1
-#define PASS 2
-#define LOUT 3
-#define ADDP 4
-#define LIST 5
-#define LIFR 6
-#define TAGF 7
-#define NOTI 8
-
-#define DATA_BUFSIZE 2024
+#define DATA_BUFSIZE 2048
 #define RECEIVE 0
 #define SEND 1
 
@@ -20,8 +11,24 @@
 #define FILE_NAME "account.txt"
 int userIndex = 0;	//number of user have in database
 int sessIndex = -1;	//number of session
-int index;
 
+#define USER 1
+#define PASS 2
+#define LOUT 3
+#define ADDP 4
+#define LIST 5
+#define LIFR 6
+#define TAGF 7
+#define NOTI 8
+#define UNKN 9
+#define MSG_DATA_LENGTH 1000
+
+//construct message Receive
+struct message {
+	int msgType;
+	int length;
+	char data[MSG_DATA_LENGTH];
+};
 
 //sessions are connecting
 struct session {
@@ -47,14 +54,20 @@ struct currentUser {
 	int numError = 0;
 }currentUser[NUMB_SESS_MAX];
 
-//construct message Receive
-struct message {
-	int msgType;
-	int length;
-	char data[DATA_BUFSIZE];
-};
-
-
+//
+//int checkSessionConnected(SOCKET connSock);
+//int checkAvailUserID(char userID[]);
+//void deleteCurrentSession(int idx);
+//void getCurrentUser(int idx, char userID[]);
+//void deleteCurrentUser(int idx);
+//void updateUser(int idx);
+//int checkMsgType(int msgType);
+//void changeStatusOfSession(int idx, int status);
+//void extractInformation(char buff[], message *msg);
+//void readWord(FILE *file, char *word);
+//void readFile(char *fileName);
+//void updateData(char *fileName);
+//int findIndex(SOCKET s);
 
 //if this client was connected before then return 1 else return 0
 int checkSessionConnected(SOCKET connSock) {
@@ -122,20 +135,25 @@ void updateUser(int idx) {
 //get message type
 //return 1-user, 2-pass, 3-logout else return 0
 int checkMsgType(int msgType) {
-	return msgType;
+	if(msgType >=0 && msgType < UNKN)
+		return msgType;
+	else return -1;
 }
 
 // change status of current session
 //IN index of session
-void changeStatusOfSession(int idx, int status)
-{
+void changeStatusOfSession(int idx, int status) {
 	sess[idx].sessionStatus = status;
 }
 
 //copy data from buff to struct message
-void extractInformation(char buff[], message *msg) {
+void extractData(char buff[], message *msg) {
 	//casting data
-	memcpy(msg, buff, sizeof(message));
+	//memcpy(msg, buff, sizeof(message));
+	
+	msg->msgType = buff[0];
+	msg->length = buff[4];
+	memcpy(&msg->data, &buff[8], sizeof(message) - 16);
 }
 
 //read a word from file
@@ -210,7 +228,7 @@ void readFile(char *fileName) {
 }
 
 // update data 
-void changeFile(char *fileName) {
+void updateData(char *fileName) {
 	FILE *file;
 	fopen_s(&file, fileName, "w+");		//open file to rewrite
 	for (int i = 0; i < userIndex; i++) {
@@ -243,7 +261,7 @@ int findIndex(SOCKET s) {
 // process if msgType is userID message
 // idx index of this session
 // return 1 if no error, else return 0
-int processUserID(int idx, char *data, char *out) {
+int checkUserID(int idx, char *data, char *out) {
 
 	if (checkAvailUserID(data) == 1)//have user in database
 	{
@@ -260,7 +278,7 @@ int processUserID(int idx, char *data, char *out) {
 		if (currentUser[idx].data.status == 1) {
 			changeStatusOfSession(idx, 1);	//change status to nex step is UNAUTH
 
-			memcpy(out, "+01", 3);
+			memcpy(out, "+01\0", 4);
 		}
 		else if (currentUser[idx].data.status == 0)//user status == 1 : block
 		{
@@ -268,13 +286,13 @@ int processUserID(int idx, char *data, char *out) {
 			deleteCurrentUser(idx);
 			deleteCurrentSession(idx);
 
-			memcpy(out, "-11", 3);
+			memcpy(out, "-11\0", 4);
 		}
 
 	}
 	else if (checkAvailUserID(data) == 0)	//user is not avail
 	{
-		memcpy(out, "-21", 3);
+		memcpy(out, "-21\0", 4);
 	}
 
 	return 1;
@@ -283,7 +301,7 @@ int processUserID(int idx, char *data, char *out) {
 //process if PassWord message
 // return 1 if no error, else return 0
 // idx index of this session
-int processPass(int idx, char *data, char *out) {
+int checkPass(int idx, char *data, char *out) {
 
 	if (strcmp(currentUser[idx].data.passWord, data) == 0) {				//if password true
 
@@ -292,7 +310,7 @@ int processPass(int idx, char *data, char *out) {
 
 			sess[idx].isConnected = 1;		//session is already connected
 
-			memcpy(out, "+02", 3);
+			memcpy(out, "+02\0", 4);
 		}
 	}
 	else ////if password is worng
@@ -301,18 +319,19 @@ int processPass(int idx, char *data, char *out) {
 		if (currentUser[idx].numError >= 3) {	//enter wrong password more than 3 times
 												//change status of user
 			currentUser[idx].data.status = 0;	//block account
+			sess[idx].sessionStatus = 0;
 			updateUser(idx);
 
 			//change database
-			changeFile(FILE_NAME);
+			updateData(FILE_NAME);
 
 			//delete data
 			deleteCurrentUser(idx);
 
-			memcpy(out, "-22", 3);
+			memcpy(out, "-22\0", 4);
 		}
 		else {
-			memcpy(out, "-12", 3);
+			memcpy(out, "-12\0", 4);
 		}
 	}
 
@@ -322,22 +341,18 @@ int processPass(int idx, char *data, char *out) {
 //process if logout message
 // return 1 if no error, else return 0
 // idx index of this session
-int processLogOut(int idx, char *data, char *out) {
+int logOut(int idx, char *data, char *out) {
 
 	if (sess[idx].sessionStatus == 2) {
-		if (strcmp(data, "yes") == 0)		//msg logout
-		{
-			changeStatusOfSession(idx, 0);
-			//delete data of currentUser and this session
-			deleteCurrentUser(idx);
-
-			memcpy(out, "+03", 3);
-		}
-		else
-		{
-			memcpy(out, "-13", 3);
-		}
+		changeStatusOfSession(idx, 0);
+		deleteCurrentUser(idx);
+		memcpy(out, "+03\0", 4);
 	}
+	else
+	{
+		memcpy(out, "-13\0", 4);
+	}
+	
 	return 1;
 }
 
@@ -349,46 +364,100 @@ int  process(SOCKET connSock, int idx, char buff[], char *out) {
 
 	message msg;
 
-	extractInformation(buff, &msg);
+	extractData(buff, &msg);
 
-	msg.data[msg.length] = '\0';
 	printf("receive from socket %d :  type %d length %d data %s\n", connSock, msg.msgType, msg.length, msg.data);
 	
 	if (sess[idx].sessionStatus == 0) {
-		if (msg.msgType == 1) {
+		if (checkMsgType(msg.msgType) == USER ) {
 			if (checkSessionConnected(connSock) == 1) {
-				memcpy(out, "-41", 3);
+				memcpy(out, "-41\0", 4);
+				return 0;
 			}
 			else {
 				sess[idx].connSock = connSock;
-				processUserID(idx, msg.data, out);
+				checkUserID(idx, msg.data, out);
+				return 0;
 			}
 		}
-		else memcpy(out, "-10", 3);
+		else if (checkMsgType(msg.msgType) == -1) {
+			memcpy(out, "-10\0", 4);
+			return 0;
+		}
+		else {
+			memcpy(out, "-20\0", 4);
+			return 0;
+		}
+
 	}
 	else if (sess[idx].sessionStatus == 1) {
-		if (msg.msgType == 2)
-			processPass(idx, msg.data, out);
-		
-		else memcpy(out, "-10", 3);
+		if (checkMsgType(msg.msgType) == PASS) {
+			checkPass(idx, msg.data, out);
+			return 0;
+		}
+		else if (checkMsgType(msg.msgType) == -1) {
+			memcpy(out, "-10\0", 4);
+			return 0;
+		}
+		else {
+			memcpy(out, "-20\0", 4);
+			return 0;
+		}
 	} 
 	else if (sess[idx].sessionStatus == 2) {
-		if (msg.msgType == 3)
-			processLogOut(idx, msg.data, out);
-		else memcpy(out, "-10", 3);
+		if (checkMsgType(msg.msgType == ADDP)) {
+		
+			place place;
+			memcpy(&place, msg.data, sizeof(place));
+			printf("name %s longitude %f latitude %f\n", place.name, place.longitude, place.latitude);
+			if (checkPlaceInFavoriteList(place.longitude, place.latitude) == 1) {
+				memcpy(out, "-14\0", 4);
+				return 0;
+			}
+			else if (place.latitude < 180 && place.longitude < 180) {
+				memcpy(out, "+04\0", 4);
+				return 0;
+			}
+			else {
+				memcpy(out, "-24\0", 4);
+				return 0;
+			}
+			
+		}
+		else if (checkMsgType(msg.msgType) == LIST) {
+
+		}
+		else if (checkMsgType(msg.msgType) == LIFR) {
+
+		}
+		else if (checkMsgType(msg.msgType) == TAGF) {
+
+		}
+
+		if (checkMsgType(msg.msgType) == LOUT) {
+			logOut(idx, msg.data, out);
+			deleteCurrentSession(idx);
+			deleteCurrentUser(idx);
+			return 0;
+		}
+		else if (checkMsgType(msg.msgType) == -1) {
+			memcpy(out, "-10\0", 4);
+			return 0;
+		}
+		else {
+			memcpy(out, "-20\0", 4);
+			return 0;
+		}
 	}
-	else //message type can not identified
-	{
-		memcpy(out, "-14", 3);
-	}
+	
 	return 0;
 }
 
 //set index for each session
 int addNewSession() {
-	int i;
+	/*int i;
 	for (i = 0; i <= sessIndex; i++)
-		if (sess[i].connSock == 0) return i;
+		if (sess[i].connSock == 0) return i;*/
 
 	sessIndex += 1;
 	return sessIndex;
