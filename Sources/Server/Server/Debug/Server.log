@@ -1,11 +1,4 @@
 ﻿  Server.cpp
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\server.cpp(13): warning C4005: 'DATA_BUFSIZE': macro redefinition
-  c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(13): note: see previous definition of 'DATA_BUFSIZE'
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\server.cpp(48): warning C4101: 'idx': unreferenced local variable
-<<<<<<< HEAD
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\server.cpp(221): warning C4129: 's': unrecognized character escape sequence
-=======
-  LINK : C:\Users\dienv\Desktop\LTM_TUNGBT_20172\Sources\Server\Debug\Server.exe not found or not built by the last incremental link; performing full link
->>>>>>> origin/client_demo
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\server.cpp(197): warning C4129: 's': unrecognized character escape sequence
   Server.vcxproj -> C:\Users\dienv\Desktop\LTM_TUNGBT_20172\Sources\Server\Debug\Server.exe
   Server.vcxproj -> C:\Users\dienv\Desktop\LTM_TUNGBT_20172\Sources\Server\Debug\Server.pdb (Full PDB)

@@ -1,5 +1,5 @@
 
-#define _WINSOCK_DEPRECATED_NO_WARNINGS
+//#define _WINSOCK_DEPRECATED_NO_WARNINGS
 
 #include <winsock2.h>
 #include <windows.h>
@@ -10,10 +10,11 @@
 
 #pragma comment(lib, "Ws2_32.lib")
 
-#define DATA_BUFSIZE 2048
 #define RECEIVE 0
 #define SEND 1
 #define BUFF_SIZE_RESULT 3
+
+int index;
 
 // Structure definition
 typedef struct {
@@ -32,6 +33,7 @@ typedef struct {
 
 
 unsigned __stdcall serverWorkerThread(LPVOID CompletionPortID);
+unsigned __stdcall notiThread(LPVOID completionPortID);
 
 int main(int argc, char **argv) {
 
@@ -45,7 +47,6 @@ int main(int argc, char **argv) {
 	DWORD flags;
 	WSADATA wsaData;
 	unsigned short port_number;			/* Port number to use */
-	int idx;
 
 	if (WSAStartup((2, 2), &wsaData) != 0) {
 		printf("WSAStartup() failed with error %d\n", GetLastError());
@@ -96,9 +97,10 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
+	sockaddr clientAddr;
+
 	while (1) {
 		// Step 5: Accept connections
-		sockaddr clientAddr;
 		if ((acceptSock = WSAAccept(listenSock, &clientAddr, NULL, NULL, 0)) == SOCKET_ERROR) {
 			printf("WSAAccept() failed with error %d\n", WSAGetLastError());
 			return 1;
@@ -116,7 +118,7 @@ int main(int argc, char **argv) {
 		perHandleData->socket = acceptSock;
 		if (CreateIoCompletionPort((HANDLE)acceptSock, completionPort, (DWORD)perHandleData, 0) == NULL) {
 			printf("CreateIoCompletionPort() failed with error %d\n", GetLastError());
-			return 1;
+		return 1;
 		}
 
 		// Step 8: Create per I/O socket information structure to associate with the WSARecv call
@@ -127,7 +129,7 @@ int main(int argc, char **argv) {
 
 		ZeroMemory(&(perIoData->overlapped), sizeof(OVERLAPPED));
 		perIoData->sentBytes = 0;
-		//perIoData->recvBytes = 0;
+		perIoData->recvBytes = 0;
 		perIoData->dataBuff.len = DATA_BUFSIZE;
 		perIoData->dataBuff.buf = perIoData->buffer;
 		perIoData->operation = RECEIVE;
@@ -152,8 +154,8 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 	LPPER_IO_OPERATION_DATA perIoData;
 	DWORD flags;
 
-	char *result;
-	result = (char*)calloc(4, 4);
+	char result[2048];
+	//result = (char*)calloc(4, 4);
 	//result = NULL;
 	int idx = index;
 
@@ -164,7 +166,8 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 			printf("GetQueuedCompletionStatus() failed with error %d\n", GetLastError());
 			deleteCurrentSession(idx);
 			deleteCurrentUser(idx);
-			return 0;
+			//return 0;
+			continue;
 		}
 		// Check to see if an error has occurred on the socket and if so
 		// then close the socket and cleanup the SOCKET_INFORMATION structure
@@ -176,7 +179,8 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 
 			if (closesocket(perHandleData->socket) == SOCKET_ERROR) {
 				printf("closesocket() failed with error %d\n", WSAGetLastError());
-				return 0;
+				//return 0;
+				continue;
 			}
 			GlobalFree(perHandleData);
 			GlobalFree(perIoData);
@@ -189,21 +193,20 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 			perIoData->recvBytes = transferredBytes;
 			perIoData->sentBytes = 0;
 			perIoData->operation = SEND;
-
 			process(perHandleData->socket, idx, perIoData->buffer, result);
-			//printf("\socket %d   result %s\n",perHandleData->socket, result);
+			printf("\socket %d  length %d result %s\n",perHandleData->socket,strlen(result), result);
 		}
 		else if (perIoData->operation == SEND) {
 			perIoData->sentBytes += transferredBytes;
 		}
 
-		if (BUFF_SIZE_RESULT > perIoData->sentBytes) {
+		if (perIoData->sentBytes < BUFF_SIZE_RESULT) {
 			// Post another WSASend() request.
 			// Since WSASend() is not guaranteed to send all of the bytes requested,
 			// continue posting WSASend() calls until all received bytes are sent.
 			ZeroMemory(&(perIoData->overlapped), sizeof(OVERLAPPED));
 			perIoData->dataBuff.buf = result + perIoData->sentBytes;
-			perIoData->dataBuff.len = perIoData->recvBytes - perIoData->sentBytes;
+			perIoData->dataBuff.len = BUFF_SIZE_RESULT - perIoData->sentBytes;
 			perIoData->operation = SEND;
 
 			if (WSASend(perHandleData->socket,
@@ -218,7 +221,6 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 					return 0;
 				}
 			}
-			printf("\socket %d   result %s\n", perHandleData->socket, result);
 		}
 		else {
 			// No more bytes to send post another WSARecv() request
@@ -243,4 +245,8 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 		}
 
 	}
+}
+
+unsigned __stdcall notiThread(LPVOID completionPortID) {
+	return 0;
 }
