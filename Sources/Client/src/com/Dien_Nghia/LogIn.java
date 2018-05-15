@@ -12,8 +12,6 @@ import java.awt.Font;
 import javax.swing.JTextField;
 import javax.swing.JSeparator;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-
 import java.awt.TextField;
 import javax.swing.JPasswordField;
 import javax.swing.JEditorPane;
@@ -88,17 +86,39 @@ public class LogIn extends JFrame {
 		btnLogin.setFont(new Font("Harlow Solid Italic", Font.BOLD, 20));
 		btnLogin.setBackground(new Color(32, 178, 170));
 		btnLogin.setBounds(458, 432, 393, 44);
-		btnLogin.addMouseListener(new MouseAdapter() {
+		btnLogin.addMouseListener(new MouseListener() {
+			
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mousePressed(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseExited(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
 			
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				if(tfUsername.getText().equals("nghiacao") || new String(passwordField.getPassword()).equals("123")) {
-					Map map = new Map();
-					map.run();
-					setVisible(false);
-				}else {
-					JOptionPane.showMessageDialog(null, "Username or Password is incorrect!", "Warning", JOptionPane.ERROR_MESSAGE);
-				}
+				// TODO Auto-generated method stub
+				Map map = new Map();
+				map.run();
+				setVisible(false);
+				
 			}
 		});
 		
@@ -119,7 +139,6 @@ public class LogIn extends JFrame {
 		passwordField = new JPasswordField();
 		passwordField.setFont(new Font("Tahoma", Font.PLAIN, 20));
 		passwordField.setBounds(458, 289, 393, 53);
-		passwordField.setText("123");
 		pLogin.add(passwordField);
 		
 		JLabel label = new JLabel("");
@@ -133,7 +152,6 @@ public class LogIn extends JFrame {
 		tfUsername.setBounds(458, 151, 393, 53);
 		pLogin.add(tfUsername);
 		tfUsername.setColumns(10);
-		tfUsername.setText("nghiacao");
 		
 		JLabel lbClose = new JLabel("");
 		lbClose.addMouseListener(new MouseAdapter() {
