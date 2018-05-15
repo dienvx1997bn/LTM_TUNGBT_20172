@@ -4,6 +4,7 @@ import com.teamdev.jxbrowser.chromium.Browser;
 import com.teamdev.jxbrowser.chromium.swing.BrowserView;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
 
 public class Map {
     public void run() {
@@ -13,10 +14,21 @@ public class Map {
         JFrame frame = new JFrame("Map");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.add(view, BorderLayout.CENTER);
-        frame.setSize(1000, 700);
+        frame.setSize(1200,800);
         frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
+        frame.setVisible(true);        
 
-        browser.loadURL("http://maps.google.com");
+        browser.loadURL("src/images/map.html");
+        browser.getFullScreenHandler();
     }
+    
+   public void getLongitude() {
+	   
+   }
+   
+   public void getLatitude() {
+	
+   }
+   
+   
 }
