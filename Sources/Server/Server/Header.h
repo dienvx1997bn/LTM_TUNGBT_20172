@@ -7,10 +7,13 @@
 
 #define NUMB_USERS_MAX 255
 #define NUMB_SESS_MAX 255
+#define NUM_LOCATION_MAX 255
 #define BUFF_SIZE_RESULT 3
-#define FILE_NAME "account.txt"
+#define FILE_ACC "account.txt"
+#define FILE_LOCATION "location.txt"
 int userIndex = 0;	//number of user have in database
-int sessIndex = -1;	//number of session
+int sessIndex = 0;	//number of session
+int numLocation = 0;
 
 #define USER 1
 #define PASS 2
@@ -54,6 +57,14 @@ struct currentUser {
 	int numError = 0;
 }currentUser[NUMB_SESS_MAX];
 
+struct location {
+	char name[255];
+	float latitude;
+	float longitude;
+	char userID[255];
+}locat[NUM_LOCATION_MAX];
+
+
 //
 //int checkSessionConnected(SOCKET connSock);
 //int checkAvailUserID(char userID[]);
@@ -68,6 +79,21 @@ struct currentUser {
 //void readFile(char *fileName);
 //void updateData(char *fileName);
 //int findIndex(SOCKET s);
+
+int newIndex() {
+	/*int i;
+	for (i = 0; i <= sessIndex; i++)
+		if (sess[i].connSock == 0) {
+		return i;
+		}
+*/
+	sessIndex = sessIndex + 1;
+	return sessIndex;
+}
+
+void addNewSession(int idx, SOCKET connSock) {
+	sess[idx].connSock = connSock;
+}
 
 //if this client was connected before then return 1 else return 0
 int checkSessionConnected(SOCKET connSock) {
@@ -178,7 +204,7 @@ void readWord(FILE *file, char *word) {
 }
 
 //read user data from file
-void readFile(char *fileName) {
+void readAccount(char *fileName) {
 	FILE *file;
 	//open file to read text
 	fopen_s(&file, fileName, "r");
@@ -226,6 +252,73 @@ void readFile(char *fileName) {
 		fclose(file);
 	}
 }
+
+//read favorite location
+void readFavoriteLocation(char *fileName) {
+	FILE *file;
+	//open file to read text
+	fopen_s(&file, fileName, "r");
+	char word[255];
+
+	if (file == NULL) {
+		MessageBox(NULL, L"error", L"error open file", MB_OK);
+	}
+	else {
+		do {	//loop 
+			//read location name
+			readWord(file, word);
+			if (word[0] == '\0') {
+				continue;
+			}
+			strcpy_s(locat[numLocation].name, word);
+			if (word[0] == EOF)	//end file, then break
+			{
+				break;
+			}
+
+			//read lat
+			readWord(file, word);
+			if (word[0] == '\0') {
+				continue;
+			}
+			locat[numLocation].latitude = atof(word);
+
+			//read long
+			readWord(file, word);
+			if (word[0] == '\0') {
+				continue;
+			}
+			locat[numLocation].longitude = atof(word);
+
+			//read userID who like 
+			readWord(file, word);
+			if (word[0] == '\0') {
+				continue;
+			}
+			strcpy_s(locat[numLocation].userID, word);
+			if (word[0] == EOF)
+			{
+				break;
+			}
+			
+			numLocation += 1;
+			if (word[0] == EOF)
+			{
+				break;
+			}
+		} while (true);
+		/*printf("name %s lat %f long %f userID %s\n", locat[0].name, locat[0].latitude, locat[0].longitude, locat[0].userID);
+		printf("name %s lat %f long %f userID %s\n", locat[1].name, locat[1].latitude, locat[1].longitude, locat[1].userID);
+		printf("name %s lat %f long %f userID %s\n", locat[2].name, locat[2].latitude, locat[2].longitude, locat[2].userID);
+		printf("name %s lat %f long %f userID %s\n", locat[3].name, locat[3].latitude, locat[3].longitude, locat[3].userID);*/
+
+		//close file
+		fclose(file);
+	}
+}
+
+
+
 
 // update data 
 void updateData(char *fileName) {
@@ -323,7 +416,7 @@ int checkPass(int idx, char *data, char *out) {
 			updateUser(idx);
 
 			//change database
-			updateData(FILE_NAME);
+			updateData(FILE_ACC);
 
 			//delete data
 			deleteCurrentUser(idx);
@@ -357,6 +450,16 @@ int logOut(int idx, char *data, char *out) {
 }
 
 
+//get list favorite
+void getListFavoriteLocation(char userID[], char *result) {
+	int i = 0;
+	for (i = 0; i <= numLocation; i++) {
+		if (strcmp(userID, locat[i].userID) == 0) {
+			printf("name %s lat %f long %f \n", locat[i].name, locat[i].latitude, locat[i].longitude);
+		}
+	}
+}
+
 // Receive message from client and process
 // buff data recv
 // out data response
@@ -365,7 +468,7 @@ int  process(SOCKET connSock, int idx, char buff[], char *out) {
 	message msg;
 
 	extractData(buff, &msg);
-
+	printf("index %d\n", idx);
 	printf("receive from socket %d :  type %d length %d data %s\n", connSock, msg.msgType, msg.length, msg.data);
 	
 	if (sess[idx].sessionStatus == 0) {
@@ -425,6 +528,10 @@ int  process(SOCKET connSock, int idx, char buff[], char *out) {
 			
 		}
 		else if (checkMsgType(msg.msgType) == LIST) {
+			char result;
+			getListFavoriteLocation(sess[idx].userID, &result);
+			memcpy(out, "+05\0", 4);
+			return 0;
 
 		}
 		else if (checkMsgType(msg.msgType) == LIFR) {
@@ -453,12 +560,3 @@ int  process(SOCKET connSock, int idx, char buff[], char *out) {
 	return 0;
 }
 
-//set index for each session
-int addNewSession() {
-	/*int i;
-	for (i = 0; i <= sessIndex; i++)
-		if (sess[i].connSock == 0) return i;*/
-
-	sessIndex += 1;
-	return sessIndex;
-}

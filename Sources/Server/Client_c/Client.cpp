@@ -72,12 +72,18 @@ int enterData() {
 	}
 	char *data;
 	strtok_s(word, " ", &data);
+	if (strlen(data) == 0)
+		return 0;
 	char *msgType = word;
+	if (strlen(msgType) == 0)
+		return 0;
 
 	if (strcmp(msgType, "user") == 0) msg.msgType = USER;
 	else if (strcmp(msgType, "pass") == 0) msg.msgType = PASS;
 	else if (strcmp(msgType, "lout") == 0) msg.msgType = LOUT;
 	else if (strcmp(msgType, "addp") == 0) msg.msgType = ADDP;
+	else if (strcmp(msgType, "list") == 0) msg.msgType = LIST;
+
 	else msg.msgType = UNKN;
 
 	strcpy_s(msg.data, data);
@@ -199,14 +205,20 @@ int main(int argc, char **argv) {
 	while (true)
 	{
 		data = (char*)malloc(sizeof(message));
-		if (enterData() == 0)
+		if (enterData() == 0) {
+			printf("not enough arguments\n");
 			break;
+		}
 
 
 		if (msg.msgType == ADDP) {
 			msg.length = strlen(place.name);
 			strcpy_s(msg.data, (char *)&place);
 			printf("name %s lat %f long %f\n", place.name, place.latitude, place.longitude);
+		}
+		if (msg.msgType == LIST) {
+			msg.length = 3;
+			strcpy_s(msg.data, "abc");
 		}
 
 

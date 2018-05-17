@@ -14,8 +14,6 @@
 #define SEND 1
 #define BUFF_SIZE_RESULT 3
 
-int index;
-
 // Structure definition
 typedef struct {
 	WSAOVERLAPPED overlapped;
@@ -53,7 +51,8 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	readFile(FILE_NAME);
+	readAccount(FILE_ACC);
+	readFavoriteLocation(FILE_LOCATION);
 
 	printf("Server started!\n");
 
@@ -105,8 +104,6 @@ int main(int argc, char **argv) {
 			printf("WSAAccept() failed with error %d\n", WSAGetLastError());
 			return 1;
 		}
-		index = addNewSession();
-
 		// Step 6: Create a socket information structure to associate with the socket
 		if ((perHandleData = (LPPER_HANDLE_DATA)GlobalAlloc(GPTR, sizeof(PER_HANDLE_DATA))) == NULL) {
 			printf("GlobalAlloc() failed with error %d\n", GetLastError());
@@ -116,6 +113,7 @@ int main(int argc, char **argv) {
 		// Step 7: Associate the accepted socket with the original completion port
 		printf("Socket number %d got connected...\n", acceptSock);
 		perHandleData->socket = acceptSock;
+		addNewSession(newIndex(), acceptSock);
 		if (CreateIoCompletionPort((HANDLE)acceptSock, completionPort, (DWORD)perHandleData, 0) == NULL) {
 			printf("CreateIoCompletionPort() failed with error %d\n", GetLastError());
 		return 1;
@@ -157,18 +155,20 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 	char result[2048];
 	//result = (char*)calloc(4, 4);
 	//result = NULL;
-	int idx = index;
 
 
 	while (TRUE) {
-		if (GetQueuedCompletionStatus(completionPort, &transferredBytes,
-			(LPDWORD)&perHandleData, (LPOVERLAPPED *)&perIoData, INFINITE) == 0) {
+		int resultGetQueuedCompletionStatus = GetQueuedCompletionStatus(completionPort, &transferredBytes,
+			(LPDWORD)&perHandleData, (LPOVERLAPPED *)&perIoData, INFINITE);
+		int idx = findIndex(perHandleData->socket);
+		if (resultGetQueuedCompletionStatus == 0) {
 			printf("GetQueuedCompletionStatus() failed with error %d\n", GetLastError());
 			deleteCurrentSession(idx);
 			deleteCurrentUser(idx);
 			//return 0;
 			continue;
 		}
+
 		// Check to see if an error has occurred on the socket and if so
 		// then close the socket and cleanup the SOCKET_INFORMATION structure
 		// associated with the socket
