@@ -12,7 +12,6 @@
 
 #define RECEIVE 0
 #define SEND 1
-#define BUFF_SIZE_RESULT 3
 
 // Structure definition
 typedef struct {
@@ -152,10 +151,8 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 	LPPER_IO_OPERATION_DATA perIoData;
 	DWORD flags;
 
-	char result[2048];
-	//result = (char*)calloc(4, 4);
-	//result = NULL;
-
+	char result[DATA_BUFSIZE];
+	int lengthResult;
 
 	while (TRUE) {
 		int resultGetQueuedCompletionStatus = GetQueuedCompletionStatus(completionPort, &transferredBytes,
@@ -193,20 +190,24 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 			perIoData->recvBytes = transferredBytes;
 			perIoData->sentBytes = 0;
 			perIoData->operation = SEND;
-			process(perHandleData->socket, idx, perIoData->buffer, result);
-			printf("\socket %d  length %d result %s\n",perHandleData->socket,strlen(result), result);
+			
+			memset(&result[0], 0, DATA_BUFSIZE);
+			
+			process(perHandleData->socket, idx, perIoData->buffer, result,&lengthResult);
+			
+			printf("\socket %d  length %d result %s\n",perHandleData->socket, lengthResult, result);
 		}
 		else if (perIoData->operation == SEND) {
 			perIoData->sentBytes += transferredBytes;
 		}
 
-		if (perIoData->sentBytes < BUFF_SIZE_RESULT) {
+		if (perIoData->sentBytes < lengthResult) {
 			// Post another WSASend() request.
 			// Since WSASend() is not guaranteed to send all of the bytes requested,
 			// continue posting WSASend() calls until all received bytes are sent.
 			ZeroMemory(&(perIoData->overlapped), sizeof(OVERLAPPED));
 			perIoData->dataBuff.buf = result + perIoData->sentBytes;
-			perIoData->dataBuff.len = BUFF_SIZE_RESULT - perIoData->sentBytes;
+			perIoData->dataBuff.len = lengthResult - perIoData->sentBytes;
 			perIoData->operation = SEND;
 
 			if (WSASend(perHandleData->socket,
@@ -247,6 +248,3 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 	}
 }
 
-unsigned __stdcall notiThread(LPVOID completionPortID) {
-	return 0;
-}

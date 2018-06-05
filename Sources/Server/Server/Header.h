@@ -1,14 +1,15 @@
 #pragma once
-#include "place.h"
+#include "FileIO.h"
 
-#define DATA_BUFSIZE 2048
+#define DATA_BUFSIZE 4000
 #define RECEIVE 0
 #define SEND 1
 
-#define NUMB_USERS_MAX 255
-#define NUMB_SESS_MAX 255
-#define NUM_LOCATION_MAX 255
-#define BUFF_SIZE_RESULT 3
+#define NUMB_USERS_MAX 1000
+#define NUMB_SESS_MAX 1000
+#define NUM_LOCATION_MAX 1000
+#define NUM_FAVORITE_PLACE_MAX 100
+#define NAME_LENGTH 255
 #define FILE_ACC "account.txt"
 #define FILE_LOCATION "location.txt"
 int userIndex = 0;	//number of user have in database
@@ -24,18 +25,18 @@ int numLocation = 0;
 #define TAGF 7
 #define NOTI 8
 #define UNKN 9
-#define MSG_DATA_LENGTH 1000
+//#define MSG_DATA_LENGTH 2000
 
 //construct message Receive
 struct message {
 	int msgType;
 	int length;
-	char data[MSG_DATA_LENGTH];
+	char data[DATA_BUFSIZE - 16];
 };
 
 //sessions are connecting
 struct session {
-	char userID[255];	//user id
+	char userID[NAME_LENGTH];	//user id
 	SOCKET connSock;	//socket
 	sockaddr_in clientAddr;	//client address
 	int sessionStatus = 0;	//0-UNIDENT, 1-UNAUTH, 2-AUTH
@@ -46,8 +47,8 @@ struct session {
 
 //construct user data
 struct user {
-	char userID[255];
-	char passWord[255];
+	char userID[NAME_LENGTH];
+	char passWord[NAME_LENGTH];
 	int status;			//0- block, 1- active
 }user[NUMB_USERS_MAX];
 
@@ -57,13 +58,20 @@ struct currentUser {
 	int numError = 0;
 }currentUser[NUMB_SESS_MAX];
 
+//chua thong tin dia diem yeu thich cua tat ca user trong csdl
 struct location {
-	char name[255];
+	char name[NAME_LENGTH];
 	float latitude;
 	float longitude;
-	char userID[255];
+	char userID[NAME_LENGTH];
 }locat[NUM_LOCATION_MAX];
 
+// cau truc thong diep de user them dia diem yeu thich
+struct place {
+	float longitude;
+	float latitude;
+	char name[NAME_LENGTH];
+};
 
 //
 //int checkSessionConnected(SOCKET connSock);
@@ -79,14 +87,169 @@ struct location {
 //void readFile(char *fileName);
 //void updateData(char *fileName);
 //int findIndex(SOCKET s);
+//read user data from file
+
+void increaseNumlocation();
+
+void readAccount(char *fileName) {
+	FILE *file;
+	//open file to read text
+	fopen_s(&file, fileName, "r");
+	char word[255];
+
+	if (file == NULL) {
+		MessageBox(NULL, L"error", L"error open file", MB_OK);
+	}
+	else {
+		do {	//loop 
+				//read userID
+			readWord(file, word);
+			if (word[0] == '\0') {
+				continue;
+			}
+			if (word[0] == EOF)	//end file, then break
+			{
+				break;
+			}
+			strcpy_s(user[userIndex].userID, word);
+			//read passWord
+			readWord(file, word);
+			if (word[0] == '\0') {
+				continue;
+			}
+			strcpy_s(user[userIndex].passWord, word);
+
+			//read status
+			readWord(file, word);
+			if (word[0] == '\0') {
+				continue;
+			}
+			user[userIndex].status = atoi(word);
+			userIndex += 1;
+
+		} while (true);
+
+		//close file
+		fclose(file);
+	}
+}
+
+
+// update data 
+void updateAccountData(char *fileName) {
+	FILE *file;
+	fopen_s(&file, fileName, "w+");		//open file to rewrite
+	for (int i = 0; i < userIndex; i++) {
+		//put userID
+		fputs(user[i].userID, file);
+		fputc(' ', file);
+		//put pass
+		fputs(user[i].passWord, file);
+		fputc(' ', file);
+		//put status
+		fprintf(file, "%d", user[i].status);
+		if (i != userIndex - 1)
+			fputc('\n', file);
+		else if (i == userIndex - 1)		//all data was
+			break;
+	}
+	fputc('\n', file);
+	fclose(file);	//close file
+}
+
+
+//read favorite location
+void readFavoriteLocation(char *fileName) {
+	FILE *file;
+	//open file to read text
+	fopen_s(&file, fileName, "r");
+	char word[255];
+
+	if (file == NULL) {
+		MessageBox(NULL, L"error", L"error open file", MB_OK);
+	}
+	else {
+		do {	//loop 
+				//read location name
+			readWord(file, word);
+			if (word[0] == '\0') {
+				continue;
+			}
+			strcpy_s(locat[numLocation].name, word);
+			if (word[0] == EOF)	//end file, then break
+			{
+				break;
+			}
+
+			//read lat
+			readWord(file, word);
+			if (word[0] == '\0') {
+				continue;
+			}
+			locat[numLocation].latitude = atof(word);
+
+			//read long
+			readWord(file, word);
+			if (word[0] == '\0') {
+				continue;
+			}
+			locat[numLocation].longitude = atof(word);
+
+			//read userID who like 
+			readWord(file, word);
+			if (word[0] == '\0') {
+				continue;
+			}
+			strcpy_s(locat[numLocation].userID, word);
+			if (word[0] == EOF)
+			{
+				break;
+			}
+
+			increaseNumlocation();
+
+			if (word[0] == EOF)
+			{
+				break;
+			}
+		} while (true);
+
+		//close file
+		fclose(file);
+	}
+}
+
+void updateLoationData(char *fileName) {
+	FILE *file;
+	fopen_s(&file, fileName, "w+");		//open file to rewrite
+	for (int i = 0; i < numLocation; i++) {
+
+		fputs(locat[i].name, file);
+		fputc(' ', file);
+
+		fprintf(file, "%f", locat[i].latitude);
+		fputc(' ', file);
+
+		fprintf(file, "%f", locat[i].longitude);
+		fputc(' ', file);
+
+		fputs(locat[i].userID, file);
+
+		fputc('\n', file);
+
+	}
+	fclose(file);	//close file
+}
+
+
 
 int newIndex() {
-	/*int i;
+	int i;
 	for (i = 0; i <= sessIndex; i++)
 		if (sess[i].connSock == 0) {
 		return i;
 		}
-*/
+
 	sessIndex = sessIndex + 1;
 	return sessIndex;
 }
@@ -182,164 +345,6 @@ void extractData(char buff[], message *msg) {
 	memcpy(&msg->data, &buff[8], sizeof(message) - 16);
 }
 
-//read a word from file
-//OUT word
-void readWord(FILE *file, char *word) {
-	int idx = 0;
-	char ch;
-
-	word[idx] = '\0';
-	//read a word
-	do {
-		ch = fgetc(file);	//read a char from file
-		if (ch == '\n' || ch == EOF || ch == ' ') {
-			if (ch == EOF) word[0] = EOF;
-			break;
-		}
-		word[idx] = ch;
-		idx++;
-	} while (true);
-
-	word[idx] = '\0';	//end of string 
-}
-
-//read user data from file
-void readAccount(char *fileName) {
-	FILE *file;
-	//open file to read text
-	fopen_s(&file, fileName, "r");
-	char word[255];
-
-	if (file == NULL) {
-		MessageBox(NULL, L"error", L"error open file", MB_OK);
-	}
-	else {
-		do {	//loop 
-				//read userID
-			readWord(file, word);
-			if (word[0] == '\0') {
-				continue;
-			}
-			strcpy_s(user[userIndex].userID, word);
-			if (word[0] == EOF)	//end file, then break
-			{
-				break;
-			}
-			//read passWord
-			readWord(file, word);
-			if (word[0] == '\0') {
-				continue;
-			}
-			strcpy_s(user[userIndex].passWord, word);
-			if (word[0] == EOF)
-			{
-				break;
-			}
-			//read status
-			readWord(file, word);
-			if (word[0] == '\0') {
-				continue;
-			}
-			user[userIndex].status = atoi(word);
-			userIndex += 1;
-			if (word[0] == EOF)
-			{
-				break;
-			}
-		} while (true);
-
-		//close file
-		fclose(file);
-	}
-}
-
-//read favorite location
-void readFavoriteLocation(char *fileName) {
-	FILE *file;
-	//open file to read text
-	fopen_s(&file, fileName, "r");
-	char word[255];
-
-	if (file == NULL) {
-		MessageBox(NULL, L"error", L"error open file", MB_OK);
-	}
-	else {
-		do {	//loop 
-			//read location name
-			readWord(file, word);
-			if (word[0] == '\0') {
-				continue;
-			}
-			strcpy_s(locat[numLocation].name, word);
-			if (word[0] == EOF)	//end file, then break
-			{
-				break;
-			}
-
-			//read lat
-			readWord(file, word);
-			if (word[0] == '\0') {
-				continue;
-			}
-			locat[numLocation].latitude = atof(word);
-
-			//read long
-			readWord(file, word);
-			if (word[0] == '\0') {
-				continue;
-			}
-			locat[numLocation].longitude = atof(word);
-
-			//read userID who like 
-			readWord(file, word);
-			if (word[0] == '\0') {
-				continue;
-			}
-			strcpy_s(locat[numLocation].userID, word);
-			if (word[0] == EOF)
-			{
-				break;
-			}
-			
-			numLocation += 1;
-			if (word[0] == EOF)
-			{
-				break;
-			}
-		} while (true);
-		/*printf("name %s lat %f long %f userID %s\n", locat[0].name, locat[0].latitude, locat[0].longitude, locat[0].userID);
-		printf("name %s lat %f long %f userID %s\n", locat[1].name, locat[1].latitude, locat[1].longitude, locat[1].userID);
-		printf("name %s lat %f long %f userID %s\n", locat[2].name, locat[2].latitude, locat[2].longitude, locat[2].userID);
-		printf("name %s lat %f long %f userID %s\n", locat[3].name, locat[3].latitude, locat[3].longitude, locat[3].userID);*/
-
-		//close file
-		fclose(file);
-	}
-}
-
-
-
-
-// update data 
-void updateData(char *fileName) {
-	FILE *file;
-	fopen_s(&file, fileName, "w+");		//open file to rewrite
-	for (int i = 0; i < userIndex; i++) {
-		//put userID
-		fputs(user[i].userID, file);
-		fputc(' ', file);
-		//put pass
-		fputs(user[i].passWord, file);
-		fputc(' ', file);
-		//put status
-		fprintf(file, "%d", user[i].status);
-		if (i != userIndex - 1)
-			fputc('\n', file);
-		else if (i == userIndex - 1)		//all data was
-			break;
-	}
-	fclose(file);	//close file
-}
 
 int findIndex(SOCKET s) {
 	int i;
@@ -416,7 +421,7 @@ int checkPass(int idx, char *data, char *out) {
 			updateUser(idx);
 
 			//change database
-			updateData(FILE_ACC);
+			updateAccountData(FILE_ACC);
 
 			//delete data
 			deleteCurrentUser(idx);
@@ -449,32 +454,68 @@ int logOut(int idx, char *data, char *out) {
 	return 1;
 }
 
-
-//get list favorite
-void getListFavoriteLocation(char userID[], char *result) {
-	int i = 0;
-	for (i = 0; i <= numLocation; i++) {
-		if (strcmp(userID, locat[i].userID) == 0) {
-			printf("name %s lat %f long %f \n", locat[i].name, locat[i].latitude, locat[i].longitude);
-		}
-	}
+void increaseNumlocation() {
+	numLocation += 1;
 }
 
-// Receive message from client and process
-// buff data recv
-// out data response
-int  process(SOCKET connSock, int idx, char buff[], char *out) {
 
+//get list favorite
+void getListFavoriteLocation(char userID[],int *num, char result[][DATA_BUFSIZE]) {
+	int i = 0;
+	int count = 0;
+	for (i = 0; i < numLocation; i++) {
+		if (strcmp(userID, locat[i].userID) == 0) {
+			//printf("num %d %s %f %f %s\n", num, locat[i].name, locat[i].latitude, locat[i].longitude, locat[i].name);
+			memcpy(result[count], &locat[i], sizeof(location));
+			count++;
+		}
+	}
+	*num = count;
+}
+
+//add new favorite location
+//can xu ly tai nguyen gang
+int addNewLocation(char name[], float latitude, float longitude, char userID[]) {
+	int i;
+	for (i = 0; i < numLocation; i++) {
+		if (locat[i].latitude == latitude && locat[i].longitude == longitude && strcmp(userID, locat[i].userID) == 0) //this place is existed in list
+			return 0;
+	}
+	
+	int c = numLocation;
+	for (i = 0; i < strlen(name); i++) {
+		if (name[i] == ' ') {
+			name[i] = '_';
+			break;
+		}
+	}
+
+	strcpy_s(locat[c].name, name);
+	locat[c].latitude = latitude;
+	locat[c].longitude = longitude;
+	strcpy_s(locat[c].userID, userID);
+	increaseNumlocation();
+	return 1;
+};
+
+//
+int  process(SOCKET connSock, int idx, char buff[], char *out, int *length) {
+	
 	message msg;
 
 	extractData(buff, &msg);
-	printf("index %d\n", idx);
+	if (msg.length <= 0 || msg.length > DATA_BUFSIZE) {
+		memcpy(out, "-10\0", 4);
+		return 0;
+	}
+	//printf("index %d\n", idx);
 	printf("receive from socket %d :  type %d length %d data %s\n", connSock, msg.msgType, msg.length, msg.data);
 	
 	if (sess[idx].sessionStatus == 0) {
 		if (checkMsgType(msg.msgType) == USER ) {
 			if (checkSessionConnected(connSock) == 1) {
 				memcpy(out, "-41\0", 4);
+				*length = 3;
 				return 0;
 			}
 			else {
@@ -485,10 +526,12 @@ int  process(SOCKET connSock, int idx, char buff[], char *out) {
 		}
 		else if (checkMsgType(msg.msgType) == -1) {
 			memcpy(out, "-10\0", 4);
+			*length = 3;
 			return 0;
 		}
 		else {
 			memcpy(out, "-20\0", 4);
+			*length = 3;
 			return 0;
 		}
 
@@ -500,10 +543,12 @@ int  process(SOCKET connSock, int idx, char buff[], char *out) {
 		}
 		else if (checkMsgType(msg.msgType) == -1) {
 			memcpy(out, "-10\0", 4);
+			*length = 3;
 			return 0;
 		}
 		else {
 			memcpy(out, "-20\0", 4);
+			*length = 3;
 			return 0;
 		}
 	} 
@@ -512,25 +557,46 @@ int  process(SOCKET connSock, int idx, char buff[], char *out) {
 		
 			place place;
 			memcpy(&place, msg.data, sizeof(place));
-			printf("name %s longitude %f latitude %f\n", place.name, place.longitude, place.latitude);
-			if (checkPlaceInFavoriteList(place.longitude, place.latitude) == 1) {
-				memcpy(out, "-14\0", 4);
-				return 0;
-			}
-			else if (place.latitude < 180 && place.longitude < 180) {
+			printf("name %s latitude %f longitude %f\n", place.name, place.latitude, place.longitude);
+			if (place.latitude < 180 && place.longitude < 180) {
+				if (addNewLocation(place.name, place.latitude, place.longitude, sess[idx].userID) == 0) {
+					memcpy(out, "-14\0", 4);
+					*length = 3;
+					return 0;
+				}
+				updateLoationData(FILE_LOCATION);
 				memcpy(out, "+04\0", 4);
+				*length = 3;
 				return 0;
 			}
 			else {
 				memcpy(out, "-24\0", 4);
+				*length = 3;
 				return 0;
 			}
 			
 		}
 		else if (checkMsgType(msg.msgType) == LIST) {
-			char result;
-			getListFavoriteLocation(sess[idx].userID, &result);
-			memcpy(out, "+05\0", 4);
+			char result[NUM_FAVORITE_PLACE_MAX][DATA_BUFSIZE];
+			int num;
+			char dataBuff[DATA_BUFSIZE];
+			
+			location temp[NUM_LOCATION_MAX];
+			getListFavoriteLocation(sess[idx].userID, &num, result);
+			//memcpy(&temp, result, num * sizeof(location));
+			location tempLocation[100];
+			place tempPlace;
+			for (int i = 0; i < num; i++) {
+				memcpy(&tempLocation[i], result[i], sizeof(location));
+				printf("result---- %f %s\n", tempLocation[i].latitude, tempLocation[i].name);
+			}
+			/*strcpy_s(tempPlace.name, tempLocation.name);
+			tempPlace.latitude = tempLocation.latitude;
+			tempPlace.longitude = tempLocation.longitude;*/
+			memcpy(out, &tempLocation, sizeof(location));
+			*length = sizeof(location);
+			//out[sizeof(place)] = '\0';
+			//memcpy(out, "+05\0", 4);
 			return 0;
 
 		}
@@ -549,10 +615,12 @@ int  process(SOCKET connSock, int idx, char buff[], char *out) {
 		}
 		else if (checkMsgType(msg.msgType) == -1) {
 			memcpy(out, "-10\0", 4);
+			*length = 3;
 			return 0;
 		}
 		else {
 			memcpy(out, "-20\0", 4);
+			*length = 3;
 			return 0;
 		}
 	}

@@ -10,7 +10,8 @@
 
 #pragma comment(lib,"Ws2_32.lib")
 
-#define BUFF_SIZE 1024
+#define DATA_BUFSIZE 4000
+#define NAME_LENGTH 255
 
 #define USER 1
 #define PASS 2
@@ -21,21 +22,21 @@
 #define TAGF 7
 #define NOTI 8
 #define UNKN 9
-#define MSG_DATA_LENGTH 1000
+#define MSG_DATA_LENGTH 2000
 
 int sessionStatus;	//0-UNIDENT, 1-UNAUTH, 2-AUTH
 
-					//construct message 
+//construct message 
 struct message {
 	int msgType;
 	int length;
-	char data[1000];
+	char data[DATA_BUFSIZE - 16];
 }msg;
 
 struct place {
 	float longitude;
 	float latitude;
-	char name[MSG_DATA_LENGTH - 16];
+	char name[NAME_LENGTH];
 }place;
 
 //wrapper function send()
@@ -63,21 +64,18 @@ int Receive(SOCKET s, char *buff, int size, int flag) {
 // type data
 // return 1 if OK, 0 if have error
 int enterData() {
-	printf("type:    ");
+	printf("type:\t");
 
-	char word[BUFF_SIZE];
+	char word[DATA_BUFSIZE];
 	gets_s(word);
 	if (word[0] == '\0') {
 		return 0;
 	}
 	char *data;
 	strtok_s(word, " ", &data);
-	if (strlen(data) == 0)
-		return 0;
+	
 	char *msgType = word;
-	if (strlen(msgType) == 0)
-		return 0;
-
+	
 	if (strcmp(msgType, "user") == 0) msg.msgType = USER;
 	else if (strcmp(msgType, "pass") == 0) msg.msgType = PASS;
 	else if (strcmp(msgType, "lout") == 0) msg.msgType = LOUT;
@@ -137,7 +135,11 @@ void errorDetail(char *buff) {
 	}
 	else if (strcmp(buff, "-13") == 0)
 	{
-		printf("type again\n");
+		printf("Account isn't logged in\n");
+	}
+	else if (strcmp(buff, "-14") == 0)
+	{
+		printf("This place was in your favorite places list\n");
 	}
 	else
 	{
@@ -193,23 +195,22 @@ int main(int argc, char **argv) {
 	printf("Connected server! \n");
 	//connect to server
 	int ret;
-	static char buff[4];
+	static char buff[DATA_BUFSIZE];
 	char *data;
 
 	//intit msg_type 
 	sessionStatus = 0;
 	strcpy(place.name, "my house");
-	place.longitude = 12.34f;
-	place.latitude = 56.789f;
+	place.longitude = 12.34;
+	place.latitude = 56.789;
 	//loop
 	while (true)
 	{
 		data = (char*)malloc(sizeof(message));
 		if (enterData() == 0) {
 			printf("not enough arguments\n");
-			break;
+			continue;
 		}
-
 
 		if (msg.msgType == ADDP) {
 			msg.length = strlen(place.name);
@@ -238,17 +239,29 @@ int main(int argc, char **argv) {
 		//printf("buff %s ", buff);
 
 		//receive message
-		ret = Receive(client, buff, 3, 0);
+		ret = Receive(client, buff, DATA_BUFSIZE, 0);
 		if (ret < 0) {
 			return 0;
 		}
+		printf("ret = %d   ",ret);
+		buff[ret] = '\0';
+		if (ret > 3) {
+			struct place temp;
+			memcpy(&temp, buff, sizeof(struct place));
+			printf("place   %s %f %f\n", temp.name, temp.latitude, temp.longitude);
+		}
+		else {
+			printf("receive %s\n", buff);
+		}
 		//buff[3] = '\0';
 
-		printf("receive %s\n", buff);
+		
 		if (strcmp(buff, "+03") == 0) break;
 		if (isError(buff) == 1) {
 			errorDetail(buff);
 		}
+		memset(&buff[0], 0, DATA_BUFSIZE);
+
 	}
 
 	//step 6: Close socket

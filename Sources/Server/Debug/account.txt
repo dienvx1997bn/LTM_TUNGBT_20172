@@ -4,4 +4,3 @@ tungbt abc123 1
 test guessme 0
 test1 123 1
 test2 234 1
-0 0 0
