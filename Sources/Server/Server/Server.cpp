@@ -13,6 +13,7 @@
 #define RECEIVE 0
 #define SEND 1
 
+
 // Structure definition
 typedef struct {
 	WSAOVERLAPPED overlapped;
@@ -30,9 +31,9 @@ typedef struct {
 
 
 unsigned __stdcall serverWorkerThread(LPVOID CompletionPortID);
-unsigned __stdcall notiThread(LPVOID completionPortID);
+unsigned __stdcall notiThread(void *param);
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv) { 
 
 	SOCKADDR_IN serverAddr;
 	SOCKET listenSock, acceptSock;
@@ -54,6 +55,9 @@ int main(int argc, char **argv) {
 	readFavoriteLocation(FILE_LOCATION);
 
 	printf("Server started!\n");
+
+	//_beginthreadex(0, 0, notiThread, NULL, 0, 0); //start thread
+
 
 	// Step 1: Setup an I/O completion port
 	if ((completionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0)) == NULL) {
@@ -112,7 +116,9 @@ int main(int argc, char **argv) {
 		// Step 7: Associate the accepted socket with the original completion port
 		printf("Socket number %d got connected...\n", acceptSock);
 		perHandleData->socket = acceptSock;
+
 		addNewSession(newIndex(), acceptSock);
+
 		if (CreateIoCompletionPort((HANDLE)acceptSock, completionPort, (DWORD)perHandleData, 0) == NULL) {
 			printf("CreateIoCompletionPort() failed with error %d\n", GetLastError());
 		return 1;
@@ -151,8 +157,10 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 	LPPER_IO_OPERATION_DATA perIoData;
 	DWORD flags;
 
+	message msgRep;
 	char result[DATA_BUFSIZE];
-	int lengthResult;
+	msgRep.length = 0;
+	
 
 	while (TRUE) {
 		int resultGetQueuedCompletionStatus = GetQueuedCompletionStatus(completionPort, &transferredBytes,
@@ -190,24 +198,25 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 			perIoData->recvBytes = transferredBytes;
 			perIoData->sentBytes = 0;
 			perIoData->operation = SEND;
-			
-			memset(&result[0], 0, DATA_BUFSIZE);
-			
-			process(perHandleData->socket, idx, perIoData->buffer, result,&lengthResult);
-			
-			printf("\socket %d  length %d result %s\n",perHandleData->socket, lengthResult, result);
+						
+			process(perHandleData->socket, idx, perIoData->buffer, &msgRep);
+			msgRep.data[msgRep.length] = 0;
+			//printf("lengthresult %d\n", lengthResult);
+			//lengthResult = strlen(result);
+			printf("\socket %d  length %d result %s\n",perHandleData->socket, msgRep.length, msgRep.data);
+			memcpy(result, &msgRep, DATA_BUFSIZE);
 		}
 		else if (perIoData->operation == SEND) {
 			perIoData->sentBytes += transferredBytes;
 		}
 
-		if (perIoData->sentBytes < lengthResult) {
+		if (perIoData->sentBytes < DATA_BUFSIZE) {
 			// Post another WSASend() request.
 			// Since WSASend() is not guaranteed to send all of the bytes requested,
 			// continue posting WSASend() calls until all received bytes are sent.
 			ZeroMemory(&(perIoData->overlapped), sizeof(OVERLAPPED));
-			perIoData->dataBuff.buf = result + perIoData->sentBytes;
-			perIoData->dataBuff.len = lengthResult - perIoData->sentBytes;
+			perIoData->dataBuff.buf =result + perIoData->sentBytes;
+			perIoData->dataBuff.len = DATA_BUFSIZE - perIoData->sentBytes;
 			perIoData->operation = SEND;
 
 			if (WSASend(perHandleData->socket,
@@ -248,3 +257,10 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 	}
 }
 
+unsigned __stdcall notiThread(void *param) {
+	while (1) {
+		for (int i = 0; i < 10000000; i++);
+		printf(".");
+	}
+	return 0;
+}

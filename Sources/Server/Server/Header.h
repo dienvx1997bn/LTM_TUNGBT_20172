@@ -2,12 +2,10 @@
 #include "FileIO.h"
 
 #define DATA_BUFSIZE 4000
-#define RECEIVE 0
-#define SEND 1
 
 #define NUMB_USERS_MAX 1000
 #define NUMB_SESS_MAX 1000
-#define NUM_LOCATION_MAX 1000
+#define NUM_LOCATION_MAX 100
 #define NUM_FAVORITE_PLACE_MAX 100
 #define NAME_LENGTH 255
 #define FILE_ACC "account.txt"
@@ -15,6 +13,7 @@
 int userIndex = 0;	//number of user have in database
 int sessIndex = 0;	//number of session
 int numLocation = 0;
+
 
 #define USER 1
 #define PASS 2
@@ -27,11 +26,11 @@ int numLocation = 0;
 #define UNKN 9
 //#define MSG_DATA_LENGTH 2000
 
-//construct message Receive
+//construct message 
 struct message {
 	int msgType;
 	int length;
-	char data[DATA_BUFSIZE - 16];
+	char data[DATA_BUFSIZE - 8];
 };
 
 //sessions are connecting
@@ -56,6 +55,7 @@ struct user {
 struct currentUser {
 	struct user data;
 	int numError = 0;
+	int isOnline = 0;
 }currentUser[NUMB_SESS_MAX];
 
 //chua thong tin dia diem yeu thich cua tat ca user trong csdl
@@ -73,21 +73,15 @@ struct place {
 	char name[NAME_LENGTH];
 };
 
-//
-//int checkSessionConnected(SOCKET connSock);
-//int checkAvailUserID(char userID[]);
-//void deleteCurrentSession(int idx);
-//void getCurrentUser(int idx, char userID[]);
-//void deleteCurrentUser(int idx);
-//void updateUser(int idx);
-//int checkMsgType(int msgType);
-//void changeStatusOfSession(int idx, int status);
-//void extractInformation(char buff[], message *msg);
-//void readWord(FILE *file, char *word);
-//void readFile(char *fileName);
-//void updateData(char *fileName);
-//int findIndex(SOCKET s);
-//read user data from file
+struct msgListFriend {
+	char name[NAME_LENGTH];
+};
+
+struct ListTag {
+	struct place;
+	char sendUser[NAME_LENGTH];
+	char recvUser[NAME_LENGTH];
+};
 
 void increaseNumlocation();
 
@@ -134,9 +128,9 @@ void readAccount(char *fileName) {
 	}
 }
 
-
 // update data 
 void updateAccountData(char *fileName) {
+
 	FILE *file;
 	fopen_s(&file, fileName, "w+");		//open file to rewrite
 	for (int i = 0; i < userIndex; i++) {
@@ -220,6 +214,7 @@ void readFavoriteLocation(char *fileName) {
 }
 
 void updateLoationData(char *fileName) {
+	
 	FILE *file;
 	fopen_s(&file, fileName, "w+");		//open file to rewrite
 	for (int i = 0; i < numLocation; i++) {
@@ -240,7 +235,6 @@ void updateLoationData(char *fileName) {
 	}
 	fclose(file);	//close file
 }
-
 
 
 int newIndex() {
@@ -292,6 +286,17 @@ void deleteCurrentSession(int idx) {
 	sess[idx].isConnected = 0;
 }
 
+int checkUserOnline(char userID[]) {
+	int i;
+	for (i = 0; i < userIndex; i++) {
+		if (strcmp(userID, currentUser[i].data.userID) == 0) {
+			if(currentUser[i].isOnline == 1)
+				return 1; //if have
+		}
+	}
+	return 0;	//no have
+}
+
 //get information about current user in database and save to currentUser[idx]
 void getCurrentUser(int idx, char userID[]) {
 	int i;
@@ -309,6 +314,7 @@ void deleteCurrentUser(int idx) {
 	strcpy_s(currentUser[idx].data.userID, "");
 	strcpy_s(currentUser[idx].data.passWord, "");
 	currentUser[idx].data.status = 0;
+	currentUser[idx].isOnline = 0;
 }
 // update information of user 
 void updateUser(int idx) {
@@ -326,7 +332,7 @@ void updateUser(int idx) {
 int checkMsgType(int msgType) {
 	if(msgType >=0 && msgType < UNKN)
 		return msgType;
-	else return -1;
+	else return UNKN;
 }
 
 // change status of current session
@@ -399,6 +405,7 @@ int checkUserID(int idx, char *data, char *out) {
 //process if PassWord message
 // return 1 if no error, else return 0
 // idx index of this session
+int updateAccountDataLock = 0;
 int checkPass(int idx, char *data, char *out) {
 
 	if (strcmp(currentUser[idx].data.passWord, data) == 0) {				//if password true
@@ -407,7 +414,7 @@ int checkPass(int idx, char *data, char *out) {
 			changeStatusOfSession(idx, 2);		//change status to nex step is AUTH
 
 			sess[idx].isConnected = 1;		//session is already connected
-
+			currentUser[idx].isOnline = 1;
 			memcpy(out, "+02\0", 4);
 		}
 	}
@@ -421,8 +428,10 @@ int checkPass(int idx, char *data, char *out) {
 			updateUser(idx);
 
 			//change database
+			while (updateAccountDataLock == 1);
+			updateAccountDataLock = 1;
 			updateAccountData(FILE_ACC);
-
+			updateAccountDataLock = 0;
 			//delete data
 			deleteCurrentUser(idx);
 
@@ -474,8 +483,8 @@ void getListFavoriteLocation(char userID[],int *num, char result[][DATA_BUFSIZE]
 }
 
 //add new favorite location
-//can xu ly tai nguyen gang
 int addNewLocation(char name[], float latitude, float longitude, char userID[]) {
+
 	int i;
 	for (i = 0; i < numLocation; i++) {
 		if (locat[i].latitude == latitude && locat[i].longitude == longitude && strcmp(userID, locat[i].userID) == 0) //this place is existed in list
@@ -498,57 +507,110 @@ int addNewLocation(char name[], float latitude, float longitude, char userID[]) 
 	return 1;
 };
 
-//
-int  process(SOCKET connSock, int idx, char buff[], char *out, int *length) {
+void addNewTagLocation(char sendUser[], char recvUser, place place) {
+
+}
+
+void deleteTagLocation() {
+
+}
+
+
+//main process
+int updateLoationDataLock = 0;
+int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 	
 	message msg;
+	char out[DATA_BUFSIZE]; 
+	int length;
 
 	extractData(buff, &msg);
 	if (msg.length <= 0 || msg.length > DATA_BUFSIZE) {
 		memcpy(out, "-10\0", 4);
+		length = 3;
+		msgRep->length = length;
+		msgRep->msgType = checkMsgType(msg.msgType);
+		memcpy(msgRep->data, out, length);
 		return 0;
 	}
 	//printf("index %d\n", idx);
 	printf("receive from socket %d :  type %d length %d data %s\n", connSock, msg.msgType, msg.length, msg.data);
 	
+	if (checkMsgType(msg.msgType) == UNKN) {
+		memcpy(out, "-10\0", 4);
+		length = 3;
+		msgRep->length = length;
+		msgRep->msgType = checkMsgType(msg.msgType);
+		memcpy(msgRep->data, out, length);
+		return 0;
+	}
+
 	if (sess[idx].sessionStatus == 0) {
 		if (checkMsgType(msg.msgType) == USER ) {
 			if (checkSessionConnected(connSock) == 1) {
 				memcpy(out, "-41\0", 4);
-				*length = 3;
+				length = 3;
+				msgRep->length = length;
+				msgRep->msgType = checkMsgType(msg.msgType);
+				memcpy(msgRep->data, out, length);
+				return 0;
+			}
+			else if (checkUserOnline(msg.data) == 1) {
+				memcpy(out, "-31\0", 4);
+				length = 3;
+				msgRep->length = length;
+				msgRep->msgType = checkMsgType(msg.msgType);
+				memcpy(msgRep->data, out, length);
 				return 0;
 			}
 			else {
 				sess[idx].connSock = connSock;
 				checkUserID(idx, msg.data, out);
+				length = 3;
+				msgRep->length = length;
+				msgRep->msgType = checkMsgType(msg.msgType);
+				memcpy(msgRep->data, out, length);
 				return 0;
 			}
 		}
-		else if (checkMsgType(msg.msgType) == -1) {
-			memcpy(out, "-10\0", 4);
-			*length = 3;
-			return 0;
-		}
 		else {
 			memcpy(out, "-20\0", 4);
-			*length = 3;
+			length = 3;
+			msgRep->length = length;
+			msgRep->msgType = checkMsgType(msg.msgType);
+			memcpy(msgRep->data, out, length);
 			return 0;
 		}
 
 	}
 	else if (sess[idx].sessionStatus == 1) {
 		if (checkMsgType(msg.msgType) == PASS) {
+			if (checkUserOnline(currentUser[idx].data.userID) == 1) {
+				memcpy(out, "-31\0", 4);
+				length = 3;
+				msgRep->length = length;
+				msgRep->msgType = checkMsgType(msg.msgType);
+				memcpy(msgRep->data, out, length);
+				
+				deleteCurrentSession(idx);
+				deleteCurrentUser(idx);
+				return 0;
+
+			}
+			
 			checkPass(idx, msg.data, out);
-			return 0;
-		}
-		else if (checkMsgType(msg.msgType) == -1) {
-			memcpy(out, "-10\0", 4);
-			*length = 3;
+			length = 3;
+			msgRep->length = length;
+			msgRep->msgType = checkMsgType(msg.msgType);
+			memcpy(msgRep->data, out, length);
 			return 0;
 		}
 		else {
 			memcpy(out, "-20\0", 4);
-			*length = 3;
+			length = 3;
+			msgRep->length = length;
+			msgRep->msgType = checkMsgType(msg.msgType);
+			memcpy(msgRep->data, out, length);
 			return 0;
 		}
 	} 
@@ -561,17 +623,29 @@ int  process(SOCKET connSock, int idx, char buff[], char *out, int *length) {
 			if (place.latitude < 180 && place.longitude < 180) {
 				if (addNewLocation(place.name, place.latitude, place.longitude, sess[idx].userID) == 0) {
 					memcpy(out, "-14\0", 4);
-					*length = 3;
+					length = 3;
+					msgRep->length = length;
+					msgRep->msgType = checkMsgType(msg.msgType);
+					memcpy(msgRep->data, out, length);
 					return 0;
 				}
+				while (updateLoationDataLock == 1);
+				updateLoationDataLock = 1;
 				updateLoationData(FILE_LOCATION);
+				updateLoationDataLock = 0;
 				memcpy(out, "+04\0", 4);
-				*length = 3;
+				length = 3;
+				msgRep->length = length;
+				msgRep->msgType = checkMsgType(msg.msgType);
+				memcpy(msgRep->data, out, length);
 				return 0;
 			}
 			else {
 				memcpy(out, "-24\0", 4);
-				*length = 3;
+				length = 3;
+				msgRep->length = length;
+				msgRep->msgType = checkMsgType(msg.msgType);
+				memcpy(msgRep->data, out, length);
 				return 0;
 			}
 			
@@ -583,48 +657,62 @@ int  process(SOCKET connSock, int idx, char buff[], char *out, int *length) {
 			
 			location temp[NUM_LOCATION_MAX];
 			getListFavoriteLocation(sess[idx].userID, &num, result);
-			//memcpy(&temp, result, num * sizeof(location));
 			location tempLocation[100];
-			place tempPlace;
+			place tempPlace[100];
 			for (int i = 0; i < num; i++) {
 				memcpy(&tempLocation[i], result[i], sizeof(location));
 				printf("result---- %f %s\n", tempLocation[i].latitude, tempLocation[i].name);
+				memcpy(&tempPlace[i].name, &tempLocation[i].name,NAME_LENGTH);
+				tempPlace[i].latitude = tempLocation[i].latitude;
+				tempPlace[i].longitude = tempLocation[i].longitude;
 			}
-			/*strcpy_s(tempPlace.name, tempLocation.name);
-			tempPlace.latitude = tempLocation.latitude;
-			tempPlace.longitude = tempLocation.longitude;*/
-			memcpy(out, &tempLocation, sizeof(location));
-			*length = sizeof(location);
-			//out[sizeof(place)] = '\0';
-			//memcpy(out, "+05\0", 4);
+			
+			memcpy(out, &tempPlace, num * sizeof(place));
+			length = num * sizeof(place);
+			printf("lengthresult %d\n", length);
+			
+			msgRep->length = length;
+			msgRep->msgType = checkMsgType(msg.msgType);
+			memcpy(msgRep->data, out, length);
 			return 0;
-
 		}
 		else if (checkMsgType(msg.msgType) == LIFR) {
-
+			struct msgListFriend tempData[NUMB_USERS_MAX];
+			int i;
+			for (int i = 0; i < userIndex; i++) {
+				memcpy(&tempData[i], user[i].userID, NAME_LENGTH);
+			}
+			length = userIndex * NAME_LENGTH;
+			memcpy(out, tempData, length);
+			msgRep->length = length;
+			msgRep->msgType = checkMsgType(msg.msgType);
+			memcpy(msgRep->data, out, length);
+			return 0;
 		}
 		else if (checkMsgType(msg.msgType) == TAGF) {
 
 		}
 
-		if (checkMsgType(msg.msgType) == LOUT) {
+		else if (checkMsgType(msg.msgType) == LOUT) {
 			logOut(idx, msg.data, out);
 			deleteCurrentSession(idx);
 			deleteCurrentUser(idx);
-			return 0;
-		}
-		else if (checkMsgType(msg.msgType) == -1) {
-			memcpy(out, "-10\0", 4);
-			*length = 3;
+			memcpy(out, "+03\0", 4);
+			length = 3;
+			msgRep->length = length;
+			msgRep->msgType = checkMsgType(msg.msgType);
+			memcpy(msgRep->data, out, length);
 			return 0;
 		}
 		else {
 			memcpy(out, "-20\0", 4);
-			*length = 3;
+			length = 3;
+			msgRep->length = length;
+			msgRep->msgType = checkMsgType(msg.msgType);
+			memcpy(msgRep->data, out, length);
 			return 0;
 		}
 	}
-	
 	return 0;
 }
 

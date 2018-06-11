@@ -149,6 +149,7 @@
     <ClCompile Include="Server.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CircularLinkedList.h" />
     <ClInclude Include="FileIO.h" />
     <ClInclude Include="Header.h" />
   </ItemGroup>

@@ -30,7 +30,7 @@ int sessionStatus;	//0-UNIDENT, 1-UNAUTH, 2-AUTH
 struct message {
 	int msgType;
 	int length;
-	char data[DATA_BUFSIZE - 16];
+	char data[DATA_BUFSIZE - 8];
 }msg;
 
 struct place {
@@ -81,7 +81,7 @@ int enterData() {
 	else if (strcmp(msgType, "lout") == 0) msg.msgType = LOUT;
 	else if (strcmp(msgType, "addp") == 0) msg.msgType = ADDP;
 	else if (strcmp(msgType, "list") == 0) msg.msgType = LIST;
-
+	else if (strcmp(msgType, "lifr") == 0) msg.msgType = LIFR;
 	else msg.msgType = UNKN;
 
 	strcpy_s(msg.data, data);
@@ -174,7 +174,7 @@ int main(int argc, char **argv) {
 	client = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
 	// (optional) Set time-out for receiving
-	int tv = 20000; //Time-out interval: 10000ms
+	int tv = 10000; //Time-out interval: 10000ms
 	setsockopt(client, SOL_SOCKET, SO_RCVTIMEO, (const char*)(&tv), sizeof(int));
 
 	//step 3: Specify server address
@@ -206,6 +206,7 @@ int main(int argc, char **argv) {
 	//loop
 	while (true)
 	{
+		
 		data = (char*)malloc(sizeof(message));
 		if (enterData() == 0) {
 			printf("not enough arguments\n");
@@ -239,28 +240,64 @@ int main(int argc, char **argv) {
 		//printf("buff %s ", buff);
 
 		//receive message
-		ret = Receive(client, buff, DATA_BUFSIZE, 0);
+		ret = Receive(client, &buff[0], DATA_BUFSIZE, 0);
 		if (ret < 0) {
 			return 0;
 		}
-		printf("ret = %d   ",ret);
-		buff[ret] = '\0';
-		if (ret > 3) {
-			struct place temp;
-			memcpy(&temp, buff, sizeof(struct place));
-			printf("place   %s %f %f\n", temp.name, temp.latitude, temp.longitude);
+		message msgRep;
+		memcpy(&msgRep, buff, DATA_BUFSIZE);
+		printf("msgRep:type %d length %d dataResult %s\n", msgRep.msgType, msgRep.length, msgRep.data);
+		if (msgRep.msgType == LIST) {
+			struct place temp[10];
+			memcpy(temp, msgRep.data, msgRep.length);
+			int num = msgRep.length / sizeof(place);
+			int i;
+			for (i = 0; i < num; i++) {
+				printf("place   %s %f %f\n", temp[i].name, temp[i].latitude, temp[i].longitude);
+			}
 		}
-		else {
-			printf("receive %s\n", buff);
+		else if (msg.msgType == LIFR) {
+			char name[100][NAME_LENGTH];
+			memcpy(name, msgRep.data, msgRep.length);
+			int num = msgRep.length / NAME_LENGTH;
+			int i;
+			for (i = 0; i < num; i++) {
+				printf("name --%s \n", name[i]);
+			}
 		}
-		//buff[3] = '\0';
+		//printf("ret = %d   ",ret);
+		//buff[ret] = '\0';
+		//if (ret > 3) {
+		//	if (msg.msgType == LIST) {
+		//		struct place temp[10];
+		//		memcpy(temp, buff, ret);
+		//		int num = ret / sizeof(place);
+		//		int i;
+		//		for (i = 0; i < num; i++) {
+		//			printf("place   %s %f %f\n", temp[i].name, temp[i].latitude, temp[i].longitude);
+		//		}
+		//	}
+		//	if (msg.msgType == LIFR) {
+		//		char name[100][NAME_LENGTH];
+		//		memcpy(name, buff, ret);
+		//		int num = ret / NAME_LENGTH;
+		//		int i;
+		//		for (i = 0; i < num; i++) {
+		//			printf("name --%s \n", name[i]);
+		//		}
+		//	}
+		//}
+		//else {
+		//	printf("receive %s\n", buff);
+		//} 
+		////buff[3] = '\0';
 
 		
-		if (strcmp(buff, "+03") == 0) break;
-		if (isError(buff) == 1) {
-			errorDetail(buff);
+		if (strcmp(msgRep.data, "+03") == 0) break;
+		if (isError(msgRep.data) == 1) {
+			errorDetail(msgRep.data);
 		}
-		memset(&buff[0], 0, DATA_BUFSIZE);
+		//memset(&buff[0], 0, DATA_BUFSIZE);
 
 	}
 
