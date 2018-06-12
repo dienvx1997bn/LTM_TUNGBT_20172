@@ -33,6 +33,10 @@ typedef struct {
 unsigned __stdcall serverWorkerThread(LPVOID CompletionPortID);
 unsigned __stdcall notiThread(void *param);
 
+void convertResultToString(char *result, message msg) {
+	memcpy(result, msg.data,msg.length);
+}
+
 int main(int argc, char **argv) { 
 
 	SOCKADDR_IN serverAddr;
@@ -201,11 +205,15 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 			perIoData->operation = SEND;
 						
 			process(perHandleData->socket, idx, perIoData->buffer, &msgRep);
+
 			msgRep.data[msgRep.length] = 0;
 			//printf("lengthresult %d\n", lengthResult);
 			//lengthResult = strlen(result);
 			printf("\socket %d  length %d result %s\n",perHandleData->socket, msgRep.length, msgRep.data);
 			memcpy(result, &msgRep, DATA_BUFSIZE);
+
+			//convert struct to String
+			//convertResultToString(result, msgRep);
 		}
 		else if (perIoData->operation == SEND) {
 			perIoData->sentBytes += transferredBytes;

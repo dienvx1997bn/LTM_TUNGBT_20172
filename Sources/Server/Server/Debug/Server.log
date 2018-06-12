@@ -1,10 +1,2 @@
-﻿  Server.cpp
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(181): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(188): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(493): warning C4018: '<': signed/unsigned mismatch
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(650): warning C4101: 'dataBuff': unreferenced local variable
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(652): warning C4101: 'temp': unreferenced local variable
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(675): warning C4101: 'i': unreferenced local variable
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\server.cpp(207): warning C4129: 's': unrecognized character escape sequence
-  Server.vcxproj -> C:\Users\dienv\Desktop\LTM_TUNGBT_20172\Sources\Server\Debug\Server.exe
+﻿  Server.vcxproj -> C:\Users\dienv\Desktop\LTM_TUNGBT_20172\Sources\Server\Debug\Server.exe
   Server.vcxproj -> C:\Users\dienv\Desktop\LTM_TUNGBT_20172\Sources\Server\Debug\Server.pdb (Full PDB)
