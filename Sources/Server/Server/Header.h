@@ -685,10 +685,10 @@ int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 			return 0;
 		}
 		else if (checkMsgType(msg.msgType) == TAGF) {
-			/*ListTag temp;
-			memcpy(&temp, msg.data, msg.length);
+			ListTag temp;
+			memcpy(&temp, msg.data, sizeof(ListTag));
 			printf("tag friend: recvUser %s lat %f long %f\n", temp.recvUser, temp.place.latitude, temp.place.longitude);
-			
+			/*
 			int i;
 			for (i = 0; i < NUMB_USER_MAX; i++) {
 				if (listTag[i].recvUser == NULL) {
