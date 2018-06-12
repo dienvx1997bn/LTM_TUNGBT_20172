@@ -39,6 +39,12 @@ struct place {
 	char name[NAME_LENGTH];
 }place;
 
+struct ListTag {
+	struct place place;
+	char recvUser[NAME_LENGTH];
+}listTag;
+
+
 //wrapper function send()
 int Send(SOCKET s, char *buff, int size, int flag) {
 	int n;
@@ -82,6 +88,7 @@ int enterData() {
 	else if (strcmp(msgType, "addp") == 0) msg.msgType = ADDP;
 	else if (strcmp(msgType, "list") == 0) msg.msgType = LIST;
 	else if (strcmp(msgType, "lifr") == 0) msg.msgType = LIFR;
+	else if (strcmp(msgType, "tagf") == 0) msg.msgType = TAGF;
 	else msg.msgType = UNKN;
 
 	strcpy_s(msg.data, data);
@@ -214,7 +221,7 @@ int main(int argc, char **argv) {
 		}
 
 		if (msg.msgType == ADDP) {
-			msg.length = strlen(place.name);
+			msg.length = sizeof(place);
 			strcpy_s(msg.data, (char *)&place);
 			printf("name %s lat %f long %f\n", place.name, place.latitude, place.longitude);
 		}
@@ -222,8 +229,15 @@ int main(int argc, char **argv) {
 			msg.length = 3;
 			strcpy_s(msg.data, "abc");
 		}
+		if (msg.msgType == TAGF) {
+			msg.length = sizeof(struct ListTag);
+			memcpy(&listTag.place, &place, sizeof(place));
+			strcpy_s(listTag.recvUser, "test1");
 
-
+			memcpy(msg.data, &listTag, sizeof(ListTag));
+			printf("recvUser %s lat %f long %f\n name %s", listTag.recvUser, listTag.place.latitude, listTag.place.longitude, listTag.place.name);
+	
+		}
 
 		//convert data type
 		memcpy(data, &msg, sizeof(message));

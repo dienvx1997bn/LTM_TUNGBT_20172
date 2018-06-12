@@ -3,8 +3,8 @@
 
 #define DATA_BUFSIZE 4000
 
-#define NUMB_USERS_MAX 1000
-#define NUMB_SESS_MAX 1000
+#define NUMB_USER_MAX 500
+#define NUMB_SESS_MAX 500
 #define NUM_LOCATION_MAX 100
 #define NUM_FAVORITE_PLACE_MAX 100
 #define NAME_LENGTH 255
@@ -24,7 +24,6 @@ int numLocation = 0;
 #define TAGF 7
 #define NOTI 8
 #define UNKN 9
-//#define MSG_DATA_LENGTH 2000
 
 //construct message 
 struct message {
@@ -49,7 +48,7 @@ struct user {
 	char userID[NAME_LENGTH];
 	char passWord[NAME_LENGTH];
 	int status;			//0- block, 1- active
-}user[NUMB_USERS_MAX];
+}user[NUMB_USER_MAX];
 
 //data of current userID 
 struct currentUser {
@@ -78,10 +77,9 @@ struct msgListFriend {
 };
 
 struct ListTag {
-	struct place;
-	char sendUser[NAME_LENGTH];
+	struct place place;
 	char recvUser[NAME_LENGTH];
-};
+}listTag[NUMB_USER_MAX];
 
 void increaseNumlocation();
 
@@ -348,7 +346,7 @@ void extractData(char buff[], message *msg) {
 	
 	msg->msgType = buff[0];
 	msg->length = buff[4];
-	memcpy(&msg->data, &buff[8], sizeof(message) - 16);
+	memcpy(&msg->data, &buff[8], sizeof(message) - 8);
 }
 
 
@@ -507,12 +505,16 @@ int addNewLocation(char name[], float latitude, float longitude, char userID[]) 
 	return 1;
 };
 
-void addNewTagLocation(char sendUser[], char recvUser, place place) {
 
-}
-
-void deleteTagLocation() {
-
+void addNewTagLocation(char sendUser[], char recvUser[], place place) {
+	int i;
+	for (i = 0; i < NUMB_USER_MAX; i++) {
+		if (listTag[i].recvUser == NULL) {
+			//copy data
+			memcpy(&listTag[i].recvUser, recvUser, NAME_LENGTH);
+			memcpy(&listTag[i].place, &place, sizeof(struct place));
+		}
+	}
 }
 
 
@@ -547,15 +549,7 @@ int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 
 	if (sess[idx].sessionStatus == 0) {
 		if (checkMsgType(msg.msgType) == USER ) {
-			if (checkSessionConnected(connSock) == 1) {
-				memcpy(out, "-41\0", 4);
-				length = 3;
-				msgRep->length = length;
-				msgRep->msgType = checkMsgType(msg.msgType);
-				memcpy(msgRep->data, out, length);
-				return 0;
-			}
-			else if (checkUserOnline(msg.data) == 1) {
+			if (checkUserOnline(msg.data) == 1) {
 				memcpy(out, "-31\0", 4);
 				length = 3;
 				msgRep->length = length;
@@ -677,7 +671,7 @@ int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 			return 0;
 		}
 		else if (checkMsgType(msg.msgType) == LIFR) {
-			struct msgListFriend tempData[NUMB_USERS_MAX];
+			struct msgListFriend tempData[NUMB_USER_MAX];
 			int i;
 			for (int i = 0; i < userIndex; i++) {
 				memcpy(&tempData[i], user[i].userID, NAME_LENGTH);
@@ -687,10 +681,27 @@ int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 			msgRep->length = length;
 			msgRep->msgType = checkMsgType(msg.msgType);
 			memcpy(msgRep->data, out, length);
+
 			return 0;
 		}
 		else if (checkMsgType(msg.msgType) == TAGF) {
+			/*ListTag temp;
+			memcpy(&temp, msg.data, msg.length);
+			printf("tag friend: recvUser %s lat %f long %f\n", temp.recvUser, temp.place.latitude, temp.place.longitude);
+			
+			int i;
+			for (i = 0; i < NUMB_USER_MAX; i++) {
+				if (listTag[i].recvUser == NULL) {
+					memcpy(&listTag[i], &temp, sizeof(ListTag));
+				}
+			}*/
 
+			memcpy(out, "+07\0", 4);
+			length = 3;
+			msgRep->length = length;
+			msgRep->msgType = checkMsgType(msg.msgType);
+			memcpy(msgRep->data, out, length);
+			return 0;
 		}
 
 		else if (checkMsgType(msg.msgType) == LOUT) {

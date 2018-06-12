@@ -58,6 +58,7 @@ int main(int argc, char **argv) {
 
 	//_beginthreadex(0, 0, notiThread, NULL, 0, 0); //start thread
 
+	//memset(listTag, 0, sizeof(ListTag)*NUMB_USER_MAX);
 
 	// Step 1: Setup an I/O completion port
 	if ((completionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0)) == NULL) {

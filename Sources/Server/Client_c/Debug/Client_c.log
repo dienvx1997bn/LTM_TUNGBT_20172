@@ -1,6 +1,2 @@
-﻿  Client.cpp
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\client_c\client.cpp(204): warning C4305: '=': truncation from 'double' to 'float'
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\client_c\client.cpp(205): warning C4305: '=': truncation from 'double' to 'float'
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\client_c\client.cpp(102): warning C4715: 'isError': not all control paths return a value
-  Client_c.vcxproj -> C:\Users\dienv\Desktop\LTM_TUNGBT_20172\Sources\Server\Debug\Client_c.exe
+﻿  Client_c.vcxproj -> C:\Users\dienv\Desktop\LTM_TUNGBT_20172\Sources\Server\Debug\Client_c.exe
   Client_c.vcxproj -> C:\Users\dienv\Desktop\LTM_TUNGBT_20172\Sources\Server\Debug\Client_c.pdb (Full PDB)
