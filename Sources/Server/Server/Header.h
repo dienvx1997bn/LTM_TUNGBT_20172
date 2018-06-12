@@ -1,6 +1,7 @@
 #pragma once
 #include "FileIO.h"
 
+
 #define DATA_BUFSIZE 4000
 
 #define NUMB_USER_MAX 500
@@ -352,12 +353,16 @@ void extractData(char buff[], message *msg) {
 	strtok_s(buff, " ", &data);
 
 	char *msgType = buff;
-	tolower(*msgType);
-
+	
 	msg->length = strlen(data);
 	strcpy_s(msg->data, data);
 	if (data == NULL) {
 		strcpy_s(msg->data, "\n");
+	}
+	int i = 0;
+	while (msgType[i]) {
+		msgType[i] = tolower(msgType[i]);
+		i++;
 	}
 
 	if (strcmp(msgType, "user") == 0) msg->msgType = USER;
@@ -376,7 +381,7 @@ int extractPlaceData(place *place, char data[]) {
 	char *lng;
 	char *err;
 
-	char  delims[] = "|,\t\n";
+	char  delims[] = "|\t\n";
 	int count = 0;
 	char* context = NULL;
 
@@ -431,7 +436,7 @@ int checkUserID(int idx, char *data, char *out) {
 		if (currentUser[idx].data.status == 1) {
 			changeStatusOfSession(idx, 1);	//change status to nex step is UNAUTH
 
-			memcpy(out, "+01\0", 4);
+			memcpy(out, "+01\0", 3);
 		}
 		else if (currentUser[idx].data.status == 0)//user status == 1 : block
 		{
@@ -439,13 +444,13 @@ int checkUserID(int idx, char *data, char *out) {
 			deleteCurrentUser(idx);
 			deleteCurrentSession(idx);
 
-			memcpy(out, "-11\0", 4);
+			memcpy(out, "-11\0", 3);
 		}
 
 	}
 	else if (checkAvailUserID(data) == 0)	//user is not avail
 	{
-		memcpy(out, "-21\0", 4);
+		memcpy(out, "-21\0", 3);
 	}
 
 	return 1;
@@ -464,7 +469,7 @@ int checkPass(int idx, char *data, char *out) {
 
 			sess[idx].isConnected = 1;		//session is already connected
 			currentUser[idx].isOnline = 1;
-			memcpy(out, "+02\0", 4);
+			memcpy(out, "+02\0", 3);
 		}
 	}
 	else ////if password is worng
@@ -484,10 +489,10 @@ int checkPass(int idx, char *data, char *out) {
 			//delete data
 			deleteCurrentUser(idx);
 
-			memcpy(out, "-22\0", 4);
+			memcpy(out, "-22\0", 3);
 		}
 		else {
-			memcpy(out, "-12\0", 4);
+			memcpy(out, "-12\0", 3);
 		}
 	}
 
@@ -502,11 +507,11 @@ int logOut(int idx, char *data, char *out) {
 	if (sess[idx].sessionStatus == 2) {
 		changeStatusOfSession(idx, 0);
 		deleteCurrentUser(idx);
-		memcpy(out, "+03\0", 4);
+		memcpy(out, "+03\0", 3);
 	}
 	else
 	{
-		memcpy(out, "-13\0", 4);
+		memcpy(out, "-13\0", 3);
 	}
 	
 	return 1;
@@ -568,11 +573,22 @@ void addNewTagLocation(char sendUser[], char recvUser[], place place) {
 	}
 }
 void makeResult(char errorCode[],int length,message msg, message *msgRep) {
-	char out[DATA_BUFSIZE];
-	memcpy(out, errorCode, length);
 	msgRep->length = length;
 	msgRep->msgType = checkMsgType(msg.msgType);
-	memcpy(msgRep->data, out, length);
+	memcpy(msgRep->data, errorCode, length);
+	
+}
+
+void makeResultListFriend(char *out, msgListFriend tempData[], int size) {
+	out[0] = NULL;
+	strcat(out,"+06 ");
+	int i = 0;
+	for (i = 0; i < size-1; i++) {
+		strcat(out, tempData[i].name);
+		strcat(out, "|");
+	}
+	strcat(out, tempData[i].name);
+	
 }
 
 //main process
@@ -594,7 +610,7 @@ int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 	
 	if (checkMsgType(msg.msgType) == UNKN) {
 		
-		makeResult("-10\0", 4, msg, msgRep);
+		makeResult("-10\0", 3, msg, msgRep);
 
 		return 0;
 	}
@@ -603,7 +619,7 @@ int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 		if (checkMsgType(msg.msgType) == USER ) {
 			if (checkUserOnline(msg.data) == 1) {
 				
-				makeResult("-31\0", 4, msg, msgRep);
+				makeResult("-31\0", 3, msg, msgRep);
 
 				return 0;
 			}
@@ -611,14 +627,14 @@ int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 				sess[idx].connSock = connSock;
 				checkUserID(idx, msg.data, out);
 				
-				makeResult(out, 4, msg, msgRep);
+				makeResult(out, 3, msg, msgRep);
 
 				return 0;
 			}
 		}
 		else {
 			
-			makeResult("-20\0", 4, msg, msgRep);
+			makeResult("-20\0", 3, msg, msgRep);
 
 			return 0;
 		}
@@ -628,7 +644,7 @@ int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 		if (checkMsgType(msg.msgType) == PASS) {
 			if (checkUserOnline(currentUser[idx].data.userID) == 1) {
 				
-				makeResult("-31\0", 4, msg, msgRep);
+				makeResult("-31\0", 3, msg, msgRep);
 				
 				deleteCurrentSession(idx);
 				deleteCurrentUser(idx);
@@ -638,13 +654,13 @@ int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 			
 			checkPass(idx, msg.data, out);
 			
-			makeResult(out, 4, msg, msgRep);
+			makeResult(out, 3, msg, msgRep);
 
 			return 0;
 		}
 		else {
 			
-			makeResult("-20\0", 4, msg, msgRep);
+			makeResult("-20\0", 3, msg, msgRep);
 
 			return 0;
 		}
@@ -659,7 +675,7 @@ int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 			//giai nen msg.data o day
 			//memcpy(&place, msg.data, sizeof(place));
 			if (extractPlaceData(&place, msg.data) == 0) {
-				makeResult("-10\0", 4, msg, msgRep);
+				makeResult("-10\0", 3, msg, msgRep);
 
 				return 0;
 			}
@@ -670,7 +686,7 @@ int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 			if (place.latitude < 180 && place.longitude < 180 || strlen(place.name) > NAME_LENGTH || place.latitude == 0 || place.longitude == 0) {
 				if (addNewLocation(place.name, place.latitude, place.longitude, sess[idx].userID) == 0) {
 					
-					makeResult("-14\0", 4, msg, msgRep);
+					makeResult("-14\0", 3, msg, msgRep);
 
 					return 0;
 				}
@@ -679,13 +695,13 @@ int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 				updateLoationData(FILE_LOCATION);
 				updateLoationDataLock = 0;
 				
-				makeResult("+04\0", 4, msg, msgRep);
+				makeResult("+04\0", 3, msg, msgRep);
 
 				return 0;
 			}
 			else {
 				
-				makeResult("-24\0", 4, msg, msgRep);
+				makeResult("-24\0", 3, msg, msgRep);
 
 				return 0;
 			}
@@ -721,10 +737,9 @@ int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 			for (int i = 0; i < userIndex; i++) {
 				memcpy(&tempData[i], user[i].userID, NAME_LENGTH);
 			}
-			length = userIndex * NAME_LENGTH;
-			memcpy(out, tempData, length);
-			
-			makeResult(out, length, msg, msgRep);
+			makeResultListFriend(out, tempData,userIndex);
+			makeResult(out, strlen(out), msg, msgRep);
+			msgRep->length = strlen(out);
 
 
 			return 0;
@@ -746,7 +761,7 @@ int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 			msgRep->length = length;
 			msgRep->msgType = checkMsgType(msg.msgType);
 			memcpy(msgRep->data, out, length);*/
-			makeResult("+07\0", 4, msg, msgRep);
+			makeResult("+07\0", 3, msg, msgRep);
 			return 0;
 		}
 
@@ -755,13 +770,13 @@ int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 			deleteCurrentSession(idx);
 			deleteCurrentUser(idx);
 			
-			makeResult("+03\0", 4, msg, msgRep);
+			makeResult("+03\0", 3, msg, msgRep);
 
 			return 0;
 		}
 		else {
 			
-			makeResult("-20\0", 4, msg, msgRep);
+			makeResult("-20\0", 3, msg, msgRep);
 
 			return 0;
 		}

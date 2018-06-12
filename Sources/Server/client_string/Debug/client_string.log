@@ -1,2 +1,7 @@
-﻿  client_string.vcxproj -> C:\Users\dienv\Desktop\LTM_TUNGBT_20172\Sources\Server\Debug\client_string.exe
+﻿  client_string.cpp
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\client_string\client_string.cpp(185): warning C4305: '=': truncation from 'double' to 'float'
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\client_string\client_string.cpp(186): warning C4305: '=': truncation from 'double' to 'float'
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\client_string\client_string.cpp(181): warning C4101: 'data': unreferenced local variable
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\client_string\client_string.cpp(84): warning C4715: 'isError': not all control paths return a value
+  client_string.vcxproj -> C:\Users\dienv\Desktop\LTM_TUNGBT_20172\Sources\Server\Debug\client_string.exe
   client_string.vcxproj -> C:\Users\dienv\Desktop\LTM_TUNGBT_20172\Sources\Server\Debug\client_string.pdb (Full PDB)

@@ -232,11 +232,14 @@ int main(int argc, char **argv) {
 		//printf("buff %s ", buff);
 
 		//receive message
-		ret = Receive(client, &buff[0], DATA_BUFSIZE, 0);
+		ret = Receive(client, buff, DATA_BUFSIZE, 0);
 		if (ret < 0) {
 			return 0;
 		}
-		message msgRep;
+		
+		buff[ret] = 0;
+		printf("receive %s\n", buff);
+		/*message msgRep;
 		memcpy(&msgRep, buff, DATA_BUFSIZE);
 		printf("msgRep:type %d length %d dataResult %s\n", msgRep.msgType, msgRep.length, msgRep.data);
 		if (msgRep.msgType == LIST) {
@@ -258,10 +261,10 @@ int main(int argc, char **argv) {
 			}
 		}
 
-
-		if (strcmp(msgRep.data, "+03") == 0) break;
-		if (isError(msgRep.data) == 1) {
-			errorDetail(msgRep.data);
+		*/
+		if (strcmp(buff, "+03") == 0) break;
+		if (isError(buff) == 1) {
+			errorDetail(buff);
 		}
 		//memset(&buff[0], 0, DATA_BUFSIZE);
 
