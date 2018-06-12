@@ -4,9 +4,14 @@ c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(189): war
 c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(396): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
 c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(400): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
 c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(549): warning C4018: '<': signed/unsigned mismatch
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(713): warning C4101: 'dataBuff': unreferenced local variable
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(715): warning C4101: 'temp': unreferenced local variable
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(736): warning C4101: 'i': unreferenced local variable
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\server.cpp(214): warning C4129: 's': unrecognized character escape sequence
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(602): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(605): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(611): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(614): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(626): warning C4101: 'length': unreferenced local variable
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(739): warning C4101: 'dataBuff': unreferenced local variable
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(741): warning C4101: 'temp': unreferenced local variable
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(763): warning C4101: 'i': unreferenced local variable
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\server.cpp(220): warning C4129: 's': unrecognized character escape sequence
   Server.vcxproj -> C:\Users\dienv\Desktop\LTM_TUNGBT_20172\Sources\Server\Debug\Server.exe
   Server.vcxproj -> C:\Users\dienv\Desktop\LTM_TUNGBT_20172\Sources\Server\Debug\Server.pdb (Full PDB)

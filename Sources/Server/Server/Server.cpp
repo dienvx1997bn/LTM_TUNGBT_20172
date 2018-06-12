@@ -208,14 +208,17 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 
 			process(perHandleData->socket, idx, perIoData->buffer, &msgRep);
 
-			msgRep.data[msgRep.length] = 0;
+			//msgRep.data[msgRep.length] = 0;
 			//printf("lengthresult %d\n", lengthResult);
 			//lengthResult = strlen(result);
-			printf("\socket %d  length %d result %s\n",perHandleData->socket, msgRep.length, msgRep.data);
+			
 			//memcpy(result, &msgRep, DATA_BUFSIZE);
 			//memcpy(result, &msgRep.data, msgRep.length);
-			
-			strcpy(result, msgRep.data);
+			memset(result, 0, DATA_BUFSIZE);
+			memcpy(result, msgRep.data, DATA_BUFSIZE);
+			msgRep.data[msgRep.length] = 0;
+			printf("\socket %d  length %d result \"%s\"\n", perHandleData->socket, msgRep.length, result);
+
 		}
 		else if (perIoData->operation == SEND) {
 			perIoData->sentBytes += transferredBytes;
@@ -226,7 +229,7 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 			// Since WSASend() is not guaranteed to send all of the bytes requested,
 			// continue posting WSASend() calls until all received bytes are sent.
 			ZeroMemory(&(perIoData->overlapped), sizeof(OVERLAPPED));
-			perIoData->dataBuff.buf =result + perIoData->sentBytes;
+			perIoData->dataBuff.buf = result + perIoData->sentBytes;
 			perIoData->dataBuff.len = msgRep.length - perIoData->sentBytes;
 			perIoData->operation = SEND;
 
@@ -242,6 +245,7 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 					return 0;
 				}
 			}
+			printf("transfer bytes %d\n", transferredBytes); //co dong nay thi k loi nhan du lieu tren client
 		}
 		else {
 			// No more bytes to send post another WSARecv() request

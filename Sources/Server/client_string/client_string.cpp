@@ -230,7 +230,7 @@ int main(int argc, char **argv) {
 		//release memory
 //		free(data);
 		//printf("buff %s ", buff);
-
+		memset(buff, 0, DATA_BUFSIZE);
 		//receive message
 		ret = Receive(client, buff, DATA_BUFSIZE, 0);
 		if (ret < 0) {
@@ -238,7 +238,7 @@ int main(int argc, char **argv) {
 		}
 		
 		buff[ret] = 0;
-		printf("receive %s\n", buff);
+		printf("ret = %d   receive %s\n", ret,buff);
 		/*message msgRep;
 		memcpy(&msgRep, buff, DATA_BUFSIZE);
 		printf("msgRep:type %d length %d dataResult %s\n", msgRep.msgType, msgRep.length, msgRep.data);
