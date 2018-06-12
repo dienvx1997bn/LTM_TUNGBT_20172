@@ -56,7 +56,7 @@ public class Listener implements Runnable {
             int bytes = 0;
             while (running) {
                 bytes = input.read(buff);
-//                System.out.println(bytes);
+                System.out.println(bytes);
                 String msg = new String(buff, 0, bytes);
                 System.out.println("<= " + msg);
                 if (msg.startsWith("NOTI ")) {
@@ -76,7 +76,7 @@ public class Listener implements Runnable {
                 }
             }
         } catch (IOException e) {
-            Logger.getLogger(Listener.class.getName()).log(Level.SEVERE, null, e);
+//            Logger.getLogger(Listener.class.getName()).log(Level.SEVERE, null, e);
         }
     }
 

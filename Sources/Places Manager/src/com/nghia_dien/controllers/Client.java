@@ -179,10 +179,12 @@ public class Client {
     }
 
     public String[] listPlaces() throws IOException {
-        sendLine("LIFR");
+        sendLine("LIST");
         String response = readLine();
+        String t1 = response.substring(response.indexOf(" ") + 1);
+        String[] t2 = t1.split("\\$");
         if (response.startsWith("+05")) {
-            return response.substring(response.indexOf(" ") + 1).split("$");
+            return response.substring(response.indexOf(" ") + 1).split("\\$");
         }
         return null;
     }
@@ -192,7 +194,7 @@ public class Client {
         sendLine("LIFR");
         String response = readLine();
         if (response.startsWith("+06")) {
-            return response.substring(response.indexOf(" ") + 1).split("|");
+            return response.substring(response.indexOf(" ") + 1).split("\\|");
         }
         return null;
     }

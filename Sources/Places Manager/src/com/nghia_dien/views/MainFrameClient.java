@@ -96,7 +96,7 @@ public class MainFrameClient extends javax.swing.JFrame {
             }
         });
 
-        txtHost.setText("10.10.38.236");
+        txtHost.setText("192.168.0.106");
         txtHost.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 txtHostKeyPressed(evt);
@@ -437,7 +437,7 @@ public class MainFrameClient extends javax.swing.JFrame {
             String[] places = this.client.listPlaces();
             DefaultListModel listModel = new DefaultListModel();
             for (String place : places) {
-                String[] info = place.split("|");
+                String[] info = place.split("\\|");
                 String item = info[0] + "(lat:" + info[1] + ", lng:" + info[2] + ")";
                 listModel.addElement(item);
             }
