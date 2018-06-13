@@ -35,6 +35,7 @@ public class MainFrameClient extends javax.swing.JFrame {
      */
     public MainFrameClient() {
         initComponents();
+        this.setLocationRelativeTo(null);
     }
 
     /**
@@ -421,7 +422,7 @@ public class MainFrameClient extends javax.swing.JFrame {
             latitude = Float.parseFloat(txtLatitude.getText());
             longtitude = Float.parseFloat(txtLongtitude.getText());
         } catch (NumberFormatException e) {
-            JOptionPane.showConfirmDialog(this, "Please mark a place before tagging friend!");
+            JOptionPane.showMessageDialog(this, "Please mark a place before tagging friend!");
             return;
         }
         String username = JOptionPane.showInputDialog(this, "Enter username");

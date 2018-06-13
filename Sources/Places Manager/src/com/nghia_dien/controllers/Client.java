@@ -206,8 +206,10 @@ public class Client {
         if (response.startsWith("+07")) {
             return true;
         } else if (response.startsWith("-17")) {
+            JOptionPane.showMessageDialog(null, "Placename isn’t in your places list.");
             return false;
         } else if (response.startsWith("-27")) {
+            JOptionPane.showMessageDialog(null, "Placename isn’t in the map. Please check again.");
             return false;
         }
         return false;
