@@ -76,6 +76,7 @@ public class Listener implements Runnable {
                 }
             }
         } catch (IOException e) {
+            stop();
 //            Logger.getLogger(Listener.class.getName()).log(Level.SEVERE, null, e);
         }
     }

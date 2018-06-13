@@ -364,6 +364,7 @@
               <Font name="Tahoma" size="13" style="1"/>
             </Property>
             <Property name="text" type="java.lang.String" value="Save"/>
+            <Property name="enabled" type="boolean" value="false"/>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnSaveActionPerformed"/>
@@ -375,6 +376,7 @@
               <Font name="Tahoma" size="13" style="1"/>
             </Property>
             <Property name="text" type="java.lang.String" value="Tag"/>
+            <Property name="enabled" type="boolean" value="false"/>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnTagActionPerformed"/>
@@ -386,6 +388,7 @@
               <Font name="Tahoma" size="13" style="1"/>
             </Property>
             <Property name="text" type="java.lang.String" value="Places List"/>
+            <Property name="enabled" type="boolean" value="false"/>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnPlaceListActionPerformed"/>
@@ -422,6 +425,7 @@
               <Font name="Tahoma" size="13" style="1"/>
             </Property>
             <Property name="text" type="java.lang.String" value="Friends List"/>
+            <Property name="enabled" type="boolean" value="false"/>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnListFriendsActionPerformed"/>
@@ -433,6 +437,7 @@
               <Font name="Tahoma" size="13" style="1"/>
             </Property>
             <Property name="text" type="java.lang.String" value="Clear Markers"/>
+            <Property name="enabled" type="boolean" value="false"/>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnClearMarkersActionPerformed"/>

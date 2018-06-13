@@ -198,6 +198,7 @@ public class MainFrameClient extends javax.swing.JFrame {
 
         btnSave.setFont(new java.awt.Font("Tahoma", 1, 13)); // NOI18N
         btnSave.setText("Save");
+        btnSave.setEnabled(false);
         btnSave.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnSaveActionPerformed(evt);
@@ -206,6 +207,7 @@ public class MainFrameClient extends javax.swing.JFrame {
 
         btnTag.setFont(new java.awt.Font("Tahoma", 1, 13)); // NOI18N
         btnTag.setText("Tag");
+        btnTag.setEnabled(false);
         btnTag.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnTagActionPerformed(evt);
@@ -214,6 +216,7 @@ public class MainFrameClient extends javax.swing.JFrame {
 
         btnPlaceList.setFont(new java.awt.Font("Tahoma", 1, 13)); // NOI18N
         btnPlaceList.setText("Places List");
+        btnPlaceList.setEnabled(false);
         btnPlaceList.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnPlaceListActionPerformed(evt);
@@ -229,6 +232,7 @@ public class MainFrameClient extends javax.swing.JFrame {
 
         btnListFriends.setFont(new java.awt.Font("Tahoma", 1, 13)); // NOI18N
         btnListFriends.setText("Friends List");
+        btnListFriends.setEnabled(false);
         btnListFriends.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnListFriendsActionPerformed(evt);
@@ -237,6 +241,7 @@ public class MainFrameClient extends javax.swing.JFrame {
 
         btnClearMarkers.setFont(new java.awt.Font("Tahoma", 1, 13)); // NOI18N
         btnClearMarkers.setText("Clear Markers");
+        btnClearMarkers.setEnabled(false);
         btnClearMarkers.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnClearMarkersActionPerformed(evt);
@@ -371,11 +376,17 @@ public class MainFrameClient extends javax.swing.JFrame {
                 btnDisconnect.setEnabled(true);
                 btnConnectStatus.setIcon(new ImageIcon("src/com/nghia_dien/resources/OK.png"));
                 pnlMap.setVisible(true);
+                btnSave.setEnabled(true);
+                btnListFriends.setEnabled(true);
+                btnPlaceList.setEnabled(true);
+                btnClearMarkers.setEnabled(true);
+                btnTag.setEnabled(true);
             }
         } catch (IOException ex) {
             Logger.getLogger(MainFrameClient.class.getName()).log(Level.SEVERE, null, ex);
             return;
         }
+
 
     }//GEN-LAST:event_btnConnectActionPerformed
 
@@ -386,6 +397,11 @@ public class MainFrameClient extends javax.swing.JFrame {
         btnDisconnect.setEnabled(false);
         btnConnectStatus.setIcon(new ImageIcon("src/com/nghia_dien/resources/fail.png"));
         pnlMap.setVisible(false);
+        btnSave.setEnabled(false);
+        btnListFriends.setEnabled(false);
+        btnPlaceList.setEnabled(false);
+        btnClearMarkers.setEnabled(false);
+        btnTag.setEnabled(false);
     }//GEN-LAST:event_btnDisconnectActionPerformed
 
     private void txtPortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtPortActionPerformed

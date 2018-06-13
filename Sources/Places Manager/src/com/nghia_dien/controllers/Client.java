@@ -155,6 +155,7 @@ public class Client {
         sendLine("LOUT");
         String response = readLine();
         if (response.startsWith("+03")) {
+            listener.stop();
             return true;
         } else if (response.startsWith("-13")) {
             JOptionPane.showMessageDialog(null, "Account isn't logged in!");//TODO: add message error here
