@@ -1,17 +1,24 @@
 ﻿  Server.cpp
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(182): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(189): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(396): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(400): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(549): warning C4018: '<': signed/unsigned mismatch
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(602): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(605): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(611): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(614): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(626): warning C4101: 'length': unreferenced local variable
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(739): warning C4101: 'dataBuff': unreferenced local variable
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(741): warning C4101: 'temp': unreferenced local variable
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(763): warning C4101: 'i': unreferenced local variable
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\server.cpp(220): warning C4129: 's': unrecognized character escape sequence
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(123): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 4 has type 'double'
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(123): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 5 has type 'double'
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(240): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(247): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(443): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(447): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(476): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(480): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(627): warning C4018: '<': signed/unsigned mismatch
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(682): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(685): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(691): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(694): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(707): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(710): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(720): warning C4101: 'length': unreferenced local variable
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(833): warning C4101: 'dataBuff': unreferenced local variable
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(835): warning C4101: 'temp': unreferenced local variable
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(857): warning C4101: 'i': unreferenced local variable
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\server.cpp(256): warning C4129: 's': unrecognized character escape sequence
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(134): warning C4715: 'tagThread': not all control paths return a value
   Server.vcxproj -> C:\Users\dienv\Desktop\LTM_TUNGBT_20172\Sources\Server\Debug\Server.exe
   Server.vcxproj -> C:\Users\dienv\Desktop\LTM_TUNGBT_20172\Sources\Server\Debug\Server.pdb (Full PDB)

@@ -28,8 +28,8 @@
      |    6    |    LIFR                          |    +06: Your friends.                                                  |    List friends   |
      +---------+----------------------------------+------------------------------------------------------------------------+-------------------+
      |    7    |    TAGF <username> <place>		  |    +07: Tag successfully                                               |    Tag friends    |
-     |         |                                  |    -17: Placename isn’t in your places list.                           |                   |
-     |         |                                  |    -27: Placename isn’t in the map. Please check again.                |                   |
+     |         |                                  |    -17: Tag Error		                        					   |                   |
+     |         |                                  |    -27: RecvUser is not avail							               |                   |
      +---------+----------------------------------+------------------------------------------------------------------------+-------------------+ 
      |    8    |    NOTI <username> <place>	      |    +08: Receive ok                                                     |                   |
     
@@ -86,4 +86,8 @@ struct message_share_place {
 }
 
 
-
+struct msgResponse {
+	int length;
+	char data[3];
+	char option[];
+}

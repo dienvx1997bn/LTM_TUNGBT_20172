@@ -58,20 +58,20 @@ struct currentUser {
 	int isOnline = 0;
 }currentUser[NUMB_SESS_MAX];
 
-//chua thong tin dia diem yeu thich cua tat ca user trong csdl
-struct location {
-	char name[NAME_LENGTH];
-	float latitude;
-	float longitude;
-	char userID[NAME_LENGTH];
-}locat[NUM_LOCATION_MAX];
-
 // cau truc thong diep de user them dia diem yeu thich
 struct place {
 	float longitude;
 	float latitude;
 	char name[NAME_LENGTH];
 };
+
+//chua thong tin dia diem yeu thich cua tat ca user trong csdl
+struct location {
+	struct place place;
+	char userID[NAME_LENGTH];
+}locat[NUM_LOCATION_MAX];
+
+
 
 struct msgListFriend {
 	char name[NAME_LENGTH];
@@ -82,7 +82,65 @@ struct ListTag {
 	char recvUser[NAME_LENGTH];
 }listTag[NUMB_USER_MAX];
 
+
+struct TagRequest {
+	char recvUser[NAME_LENGTH];
+	struct place place;
+};
+
+struct TagMessage {
+	struct TagRequest detail;
+	char sendUser[NAME_LENGTH];
+};
+
 void increaseNumlocation();
+
+//HANDLE hThread;
+/////////////
+//DWORD WINAPI ThreadWaitingFunction()
+//{
+//
+//	// without this we can not exit msgloop
+//
+//	// do stuff - eg. start a msgloop
+//	printf("them tag friend");
+//	return 0;
+//
+//}
+////////////////
+void makeResultTagFriend(char *out, struct place place, char sendUser[]);
+SOCKET findSock(char userID[]);
+
+
+unsigned __stdcall tagThread(void *prama) {
+	TagMessage *tagMsg = (TagMessage*)prama;
+	SOCKET s = findSock(tagMsg->detail.recvUser);
+	if (s == -1) {
+		printf("recvUser not online\n");
+		return 0;	//error
+	}
+
+	printf("detail recvUser %s sendUser %s name %s lat %d lng %d\n", tagMsg->detail.recvUser, tagMsg->sendUser, tagMsg->detail.place.name,
+		tagMsg->detail.place.latitude, tagMsg->detail.place.longitude);
+
+	char result[DATA_BUFSIZE];
+	makeResultTagFriend(result, tagMsg->detail.place, tagMsg->sendUser);
+
+
+	if (send(s, result, strlen(result), 0) == SOCKET_ERROR) {
+		printf("error tag friend\n");
+		return 0;
+	}
+}
+
+SOCKET findSock(char userID[]) {
+	for (int i = 0; i < userIndex; i++) {
+		if (strcmp(userID, sess[i].userID) == 0 && sess[i].isConnected == 1) {
+			return sess[i].connSock;
+		}
+	}
+	return -1;
+}
 
 void readAccount(char *fileName) {
 	FILE *file;
@@ -168,7 +226,7 @@ void readFavoriteLocation(char *fileName) {
 			if (word[0] == '\0') {
 				continue;
 			}
-			strcpy_s(locat[numLocation].name, word);
+			strcpy_s(locat[numLocation].place.name, word);
 			if (word[0] == EOF)	//end file, then break
 			{
 				break;
@@ -179,14 +237,14 @@ void readFavoriteLocation(char *fileName) {
 			if (word[0] == '\0') {
 				continue;
 			}
-			locat[numLocation].latitude = atof(word);
+			locat[numLocation].place.latitude = atof(word);
 
 			//read long
 			readWord(file, word);
 			if (word[0] == '\0') {
 				continue;
 			}
-			locat[numLocation].longitude = atof(word);
+			locat[numLocation].place.longitude = atof(word);
 
 			//read userID who like 
 			readWord(file, word);
@@ -218,13 +276,13 @@ void updateLoationData(char *fileName) {
 	fopen_s(&file, fileName, "w+");		//open file to rewrite
 	for (int i = 0; i < numLocation; i++) {
 
-		fputs(locat[i].name, file);
+		fputs(locat[i].place.name, file);
 		fputc(' ', file);
 
-		fprintf(file, "%f", locat[i].latitude);
+		fprintf(file, "%f", locat[i].place.latitude);
 		fputc(' ', file);
 
-		fprintf(file, "%f", locat[i].longitude);
+		fprintf(file, "%f", locat[i].place.longitude);
 		fputc(' ', file);
 
 		fputs(locat[i].userID, file);
@@ -251,16 +309,7 @@ void addNewSession(int idx, SOCKET connSock) {
 	sess[idx].connSock = connSock;
 }
 
-//if this client was connected before then return 1 else return 0
-int checkSessionConnected(SOCKET connSock) {
-	int i;
-	for (i = 0; i <= sessIndex; i++) {
-		if (connSock == sess[i].connSock && sess[i].isConnected == 1) {
-			return 1;
-		}
-	}
-	return 0;
-}
+
 
 //check userID have in database or not
 //IN userID
@@ -385,8 +434,6 @@ int extractPlaceData(place *place, char data[]) {
 	int count = 0;
 	char* context = NULL;
 
-
-
 	placeName = strtok_s(data, delims, &context);
 	if (placeName == NULL) return 0;
 	strcpy_s(place->name, placeName);
@@ -398,6 +445,39 @@ int extractPlaceData(place *place, char data[]) {
 	lng = strtok_s(NULL, delims, &context);
 	if (lng == NULL) return 0;
 	place->longitude = atof(lng);
+
+	err = strtok_s(NULL, delims, &context);
+	if (err != NULL) return 0;
+
+	return 1;
+}
+
+int extractTagRequestData(TagRequest *tagReq, char data[]){
+	char *recvUser;
+	char *placeName;
+	char *lat;
+	char *lng;
+	char *err;
+
+	char  delims[] = "|\t\n";
+	int count = 0;
+	char* context = NULL;
+
+	recvUser = strtok_s(data, delims, &context);
+	if (recvUser == NULL) return 0;
+	strcpy_s(tagReq->recvUser, recvUser);
+
+	placeName = strtok_s(NULL, delims, &context);
+	if (placeName == NULL) return 0;
+	strcpy_s(tagReq->place.name, placeName);
+
+	lat = strtok_s(NULL, delims, &context);
+	if (lat == NULL) return 0;
+	tagReq->place.latitude = atof(lat);
+
+	lng = strtok_s(NULL, delims, &context);
+	if (lng == NULL) return 0;
+	tagReq->place.longitude = atof(lng);
 
 	err = strtok_s(NULL, delims, &context);
 	if (err != NULL) return 0;
@@ -456,7 +536,6 @@ int checkUserID(int idx, char *data, char *out) {
 	return 1;
 }
 
-//process if PassWord message
 // return 1 if no error, else return 0
 // idx index of this session
 int updateAccountDataLock = 0;
@@ -499,7 +578,6 @@ int checkPass(int idx, char *data, char *out) {
 	return 1;
 }
 
-//process if logout message
 // return 1 if no error, else return 0
 // idx index of this session
 int logOut(int idx, char *data, char *out) {
@@ -541,7 +619,7 @@ int addNewLocation(char name[], float latitude, float longitude, char userID[]) 
 
 	int i;
 	for (i = 0; i < numLocation; i++) {
-		if (locat[i].latitude == latitude && locat[i].longitude == longitude && strcmp(userID, locat[i].userID) == 0) //this place is existed in list
+		if (locat[i].place.latitude == latitude && locat[i].place.longitude == longitude && strcmp(userID, locat[i].userID) == 0) //this place is existed in list
 			return 0;
 	}
 	
@@ -553,9 +631,9 @@ int addNewLocation(char name[], float latitude, float longitude, char userID[]) 
 		}
 	}
 
-	strcpy_s(locat[c].name, name);
-	locat[c].latitude = latitude;
-	locat[c].longitude = longitude;
+	strcpy_s(locat[c].place.name, name);
+	locat[c].place.latitude = latitude;
+	locat[c].place.longitude = longitude;
 	strcpy_s(locat[c].userID, userID);
 	increaseNumlocation();
 	return 1;
@@ -572,6 +650,8 @@ void addNewTagLocation(char sendUser[], char recvUser[], place place) {
 		}
 	}
 }
+
+
 void makeResult(char errorCode[],int length,message msg, message *msgRep) {
 	msgRep->length = length;
 	msgRep->msgType = checkMsgType(msg.msgType);
@@ -597,25 +677,39 @@ void makeResultList(char *out, struct location dataLocation[], int size) {
 	char buff[5];
 	int i = 0;
 	for (i = 0; i < size - 1; i++) {
-		strcat(out, dataLocation[i].name);
+		strcat(out, dataLocation[i].place.name);
 		strcat(out, "|");
-		_itoa(dataLocation[i].latitude, buff, 10);
+		_itoa(dataLocation[i].place.latitude, buff, 10);
 		strcat(out, buff);
 		strcat(out, "|");
-		_itoa(dataLocation[i].longitude, buff, 10);
+		_itoa(dataLocation[i].place.longitude, buff, 10);
 		strcat(out, buff);
 		strcat(out, "$");
 	}
-	strcat(out, dataLocation[i].name);
+	strcat(out, dataLocation[i].place.name);
 	strcat(out, "|");
-	_itoa(dataLocation[i].latitude, buff, 10);
+	_itoa(dataLocation[i].place.latitude, buff, 10);
 	strcat(out, buff);
 	strcat(out, "|");
-	_itoa(dataLocation[i].longitude, buff, 10);
+	_itoa(dataLocation[i].place.longitude, buff, 10);
 	strcat(out, buff);
-	strcat(out, "$");
 }
 
+void makeResultTagFriend(char *out, struct place place, char sendUser[]) {
+	out[0] = NULL;
+	char buff[5];
+	strcat(out, "+08 ");
+
+	strcat(out, sendUser);
+	strcat(out, "|");
+	strcat(out, place.name);
+	strcat(out, "|");
+	_itoa(place.latitude, buff, 10);
+	strcat(out, buff);
+	strcat(out, "|");
+	_itoa(place.longitude, buff, 10);
+	strcat(out, buff);
+}
 
 //main process
 int updateLoationDataLock = 0;
@@ -744,10 +838,10 @@ int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 			place tempPlace[100];
 			for (int i = 0; i < num; i++) {
 				memcpy(&tempLocation[i], result[i], sizeof(location));
-				printf("list---- %f %s\n", tempLocation[i].latitude, tempLocation[i].name);
-				memcpy(&tempPlace[i].name, &tempLocation[i].name,NAME_LENGTH);
-				tempPlace[i].latitude = tempLocation[i].latitude;
-				tempPlace[i].longitude = tempLocation[i].longitude;
+				printf("list---- %f %s\n", tempLocation[i].place.latitude, tempLocation[i].place.name);
+				memcpy(&tempPlace[i].name, &tempLocation[i].place.name,NAME_LENGTH);
+				tempPlace[i].latitude = tempLocation[i].place.latitude;
+				tempPlace[i].longitude = tempLocation[i].place.longitude;
 			}
 			
 			//memcpy(out, &tempPlace, num * sizeof(place));
@@ -771,24 +865,39 @@ int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 			return 0;
 		}
 		else if (checkMsgType(msg.msgType) == TAGF) {
-			ListTag temp;
-			memcpy(&temp, msg.data, sizeof(ListTag));
-			printf("tag friend: recvUser %s lat %f long %f\n", temp.recvUser, temp.place.latitude, temp.place.longitude);
-			/*
-			int i;
-			for (i = 0; i < NUMB_USER_MAX; i++) {
-				if (listTag[i].recvUser == NULL) {
-					memcpy(&listTag[i], &temp, sizeof(ListTag));
-				}
-			}*/
+			//memcpy(&temp, msg.data, sizeof(ListTag));
+			//printf("tag friend: recvUser %s lat %f long %f\n", temp.recvUser, temp.place.latitude, temp.place.longitude);
 
-			/*memcpy(out, "+07\0", 4);
-			length = 3;
-			msgRep->length = length;
-			msgRep->msgType = checkMsgType(msg.msgType);
-			memcpy(msgRep->data, out, length);*/
+			printf("tag friend\n");
+			
+			TagMessage tempTagMsg;
+			TagRequest tempTagReq;
+			
+
+			//giai nen msg.data o day
+			//memcpy(&place, msg.data, sizeof(place));
+			if (extractTagRequestData(&tempTagReq, msg.data) == 0) {
+				makeResult("-10", 3, msg, msgRep);
+				return 0;
+			}
+
+			if (checkAvailUserID(tempTagReq.recvUser) == 0) {
+				makeResult("-27", 3, msg, msgRep);
+				return 0;
+			}
+
+			memcpy(&tempTagMsg.detail,&tempTagReq,sizeof(TagRequest));
+			strcpy(tempTagMsg.sendUser, currentUser[idx].data.userID);
+			
+			if (_beginthreadex(0, 0, tagThread, (void*)&tempTagMsg, 0, 0) == 0) {
+				makeResult("-17", 3, msg, msgRep);
+				return 0;
+			}
+
 			makeResult("+07", 3, msg, msgRep);
+
 			return 0;
+			
 		}
 
 		else if (checkMsgType(msg.msgType) == LOUT) {

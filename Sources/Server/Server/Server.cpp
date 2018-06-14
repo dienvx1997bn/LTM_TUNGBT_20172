@@ -33,11 +33,43 @@ typedef struct {
 
 
 unsigned __stdcall serverWorkerThread(LPVOID CompletionPortID);
-unsigned __stdcall notiThread(void *param);
 
-void convertResultToString(char *result, message msg) {
-	memcpy(result, msg.data,msg.length);
-}
+
+
+
+///////////////
+//DWORD WINAPI ThreadWaitingFunction(LPVOID lpParameter)
+//{
+//
+//	// without this we can not exit msgloop
+//
+//	// do stuff - eg. start a msgloop
+//	printf("-");
+//	return 0;
+//
+//}
+////////////////
+//unsigned __stdcall notiThread(void *param) {
+//	while (1) {
+//		///////
+//		// CreateThreadEx
+//		DWORD dwThread;
+//		HANDLE hThread = CreateThread(NULL, (DWORD)NULL,
+//			(LPTHREAD_START_ROUTINE)ThreadWaitingFunction,
+//			(LPVOID)NULL, (DWORD)NULL, &dwThread);
+//
+//		// suspend main thread until new thread completes
+//		WaitForSingleObject(hThread, INFINITE);
+//		///////
+//
+//		for (int i = 0; i < 100000000; i++);
+//		printf(".");
+//
+//	}
+//}
+
+
+
 
 int main(int argc, char **argv) { 
 
@@ -62,7 +94,10 @@ int main(int argc, char **argv) {
 
 	printf("Server started!\n");
 
-	//_beginthreadex(0, 0, notiThread, NULL, 0, 0); //start thread
+	////
+	//_beginthreadex(0, 0, notiThread, (void*)NULL, 0, 0);
+	////
+
 
 	//memset(listTag, 0, sizeof(ListTag)*NUMB_USER_MAX);
 
@@ -78,11 +113,12 @@ int main(int argc, char **argv) {
 	// Step 3: Create worker threads based on the number of processors available on the
 	// system. Create two worker threads for each processor	
 	for (int i = 0; i < (int)systemInfo.dwNumberOfProcessors * 2; i++) {
-		// Create a server worker thread and pass the completion port to the thread
+		//Create a server worker thread and pass the completion port to the thread
 		if (_beginthreadex(0, 0, serverWorkerThread, (void*)completionPort, 0, 0) == 0) {
 			printf("Create thread failed with error %d\n", GetLastError());
 			return 1;
 		}
+	
 	}
 
 	// Step 4: Create a listening socket
@@ -270,12 +306,4 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 		}
 
 	}
-}
-
-unsigned __stdcall notiThread(void *param) {
-	while (1) {
-		for (int i = 0; i < 10000000; i++);
-		printf(".");
-	}
-	return 0;
 }
