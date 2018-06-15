@@ -440,6 +440,8 @@ int  process(SOCKET connSock, int idx, char buff[], Message *msgRep) {
 			MsgTagMessage tempTagMsg;
 			MsgTagRequest tempTagReq;
 
+			HANDLE hThread;
+
 			if (extractTagRequestData(&tempTagReq, msg.data) == 0) {
 				makeResult("-10", 3, msg, msgRep);
 				return 0;
@@ -453,10 +455,8 @@ int  process(SOCKET connSock, int idx, char buff[], Message *msgRep) {
 			memcpy(&tempTagMsg.detail, &tempTagReq, sizeof(MsgTagRequest));
 			strcpy(tempTagMsg.sendUser, currentUser[idx].data.userID);
 
-			if (_beginthreadex(0, 0, tagThread, (void*)&tempTagMsg, 0, 0) == 0) {
-				makeResult("-17", 3, msg, msgRep);
-				return 0;
-			}
+			_beginthreadex(0, 0, tagThread, (void*)&tempTagMsg, 0, 0);
+			
 
 			makeResult("+07", 3, msg, msgRep);
 			return 0;

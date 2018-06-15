@@ -87,22 +87,27 @@ struct MsgTagMessage {
 void increaseNumlocation();
 void makeResultTagFriend(char *out, Place place, char sendUser[]);
 SOCKET findSock(char userID[]);
+int checkUserOnline(char userID[]);
 
 //init thread for sending noti to client
 //IN struct MsgTagMessage
 unsigned __stdcall tagThread(void *prama) {
-	MsgTagMessage *tagMsg = (MsgTagMessage*)prama;
-	SOCKET s = findSock(tagMsg->detail.recvUser);
-	if (s == -1) {
-		printf("recvUser not online\n");
-		return 0;	//error
-	}
+	MsgTagMessage tagMsg;
+	memcpy(&tagMsg, prama, sizeof(MsgTagMessage));
+	printf("start tagThread\n");
+	while (checkUserOnline(tagMsg.detail.recvUser) == 0) {
+		Sleep(1000);
+		printf("waiting....user %s online \n", tagMsg.detail.recvUser);
+	};		//waiting until user online
+	
+	SOCKET s = findSock(tagMsg.detail.recvUser);
 
-	printf("detail recvUser %s sendUser %s name %s lat %d lng %d\n", tagMsg->detail.recvUser, tagMsg->sendUser, tagMsg->detail.place.name,
-		tagMsg->detail.place.latitude, tagMsg->detail.place.longitude);
+
+	printf("detail recvUser %s sendUser %s name %s lat %f lng %f\n", tagMsg.detail.recvUser, tagMsg.sendUser, tagMsg.detail.place.name,
+		tagMsg.detail.place.latitude, tagMsg.detail.place.longitude);
 
 	char result[DATA_BUFSIZE];
-	makeResultTagFriend(result, tagMsg->detail.place, tagMsg->sendUser);
+	makeResultTagFriend(result, tagMsg.detail.place, tagMsg.sendUser);
 
 	if (send(s, result, strlen(result), 0) == SOCKET_ERROR) {
 		printf("error tag friend\n");
@@ -333,10 +338,10 @@ int checkUserOnline(char userID[]) {
 	for (i = 0; i < userIndex; i++) {
 		if (strcmp(userID, currentUser[i].data.userID) == 0) {
 			if(currentUser[i].isOnline == 1)
-				return 1; //if have
+				return 1; //if online
 		}
 	}
-	return 0;	//no have
+	return 0;	//offline
 }
 
 //get information about current user in database and save to currentUser[idx]
@@ -512,6 +517,7 @@ int checkUserID(int idx, char *data, char *out) {
 
 	return 1;
 }
+
 
 // return 1 if no error, else return 0
 // idx index of this session

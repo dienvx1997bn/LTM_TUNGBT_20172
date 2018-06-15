@@ -1,6 +1,7 @@
-1_Đại Cồ Việt, Bách Khoa, Hai Bà Trưng, Hà Nội, Vietnam|21.005627|105.843346|tungbt
+﻿1_Đại Cồ Việt, Bách Khoa, Hai Bà Trưng, Hà Nội, Vietnam|21.005627|105.843346|tungbt
 27_Giải Phóng, Đồng Tâm, Hai Bà Trưng, Hà Nội, Vietnam|21.003452|105.843216|tungbt
 Giảng_đường, Phố Vọng, Đồng Tâm, Hai Bà Trưng, Hà Nội, Vietnam|20.999928|105.842171|dien
 Tòa_nhà Việt - Nhật, Bệnh viện Bạch Mai, Phương Mai, Đống Đa, Hà Nội, Vietnam|21.002472|105.839981|dien
-16_Giáp Nhị, Thịnh Liệt, Hoàng Mai, Hà Nội, Vietnam|20.976427|105.843521|test
-6_AH1, Hoàng Liệt, Hoàng Mai, Hà Nội, Vietnam|20.965477|105.843399|test
+5_Trương Hán Siêu, Trần Hưng Đạo, Hoàn Kiếm, Hà Nội, Vietnam|21.020418|105.849152|tungbt
+200_ĐT200, Vân Du, Ân Thi, Hưng Yên, Vietnam|20.840845|106.078491|tungbt
+nghiax|1.000000|2.000000|tungbt
