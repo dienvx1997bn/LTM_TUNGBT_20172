@@ -1,23 +1,23 @@
 ﻿  Server.cpp
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(66): warning C4091: 'typedef ': ignored on left of 'place' when no variable is declared
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(123): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 4 has type 'double'
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(123): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 5 has type 'double'
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(240): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(247): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(443): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(447): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(476): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(480): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(627): warning C4018: '<': signed/unsigned mismatch
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(681): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(684): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(700): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(703): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\server.cpp(258): warning C4129: 's': unrecognized character escape sequence
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\server.cpp(322): warning C4101: 'length': unreferenced local variable
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\server.cpp(435): warning C4101: 'dataBuff': unreferenced local variable
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\server.cpp(437): warning C4101: 'temp': unreferenced local variable
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\server.cpp(466): warning C4101: 'i': unreferenced local variable
-c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(134): warning C4715: 'tagThread': not all control paths return a value
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(62): warning C4091: 'typedef ': ignored on left of 'Place' when no variable is declared
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(101): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 4 has type 'double'
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(101): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 5 has type 'double'
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(222): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(229): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(431): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(435): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(464): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(468): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(598): warning C4018: '<': signed/unsigned mismatch
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(650): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(653): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(669): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(672): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\server.cpp(218): warning C4129: 's': unrecognized character escape sequence
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\server.cpp(282): warning C4101: 'length': unreferenced local variable
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\server.cpp(396): warning C4101: 'dataBuff': unreferenced local variable
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\server.cpp(398): warning C4101: 'temp': unreferenced local variable
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\server.cpp(425): warning C4101: 'i': unreferenced local variable
+c:\users\dienv\desktop\ltm_tungbt_20172\sources\server\server\header.h(111): warning C4715: 'tagThread': not all control paths return a value
   Server.vcxproj -> C:\Users\dienv\Desktop\LTM_TUNGBT_20172\Sources\Server\Debug\Server.exe
   Server.vcxproj -> C:\Users\dienv\Desktop\LTM_TUNGBT_20172\Sources\Server\Debug\Server.pdb (Full PDB)

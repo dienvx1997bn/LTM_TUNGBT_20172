@@ -1,22 +1,6 @@
-DH_Bach_Khoa_HN 1.000000 2.000000 dien
-DH_KTQD 3.000000 4.000000 dien
-DH_KTQD 5.000000 6.000000 tungbt
-DH_XD 7.000000 8.000000 dien
-anh 1.234000 5.600000 dien
-a 1.000000 23.000000 dien
-vcxv 12.760000 54.430000 dien
-Unnamed_Road, 0.000000 0.000000 Thường
-Tín, 0.000000 0.000000 Vietnam
-20.887041 105.851898 0.000000 Ngọc_Nội,
-Ninh 0.000000 0.000000 Thành,
-Bắc 0.000000 0.000000 21.021702
-a 156.000000 21.000000 dien
-80_ĐT419, 0.000000 0.000000 Chương
-Mỹ, 0.000000 0.000000 Vietnam
-Unnamed_Road, 0.000000 0.000000 Thường
-Tín, 0.000000 0.000000 Vietnam
-dasd 12.000000 1.200000 dien
-a 1.000000 -1.000000 dien
-Unnamed_Road, 0.000000 0.000000 Chương
-Mỹ, 0.000000 0.000000 Vietnam
-dien 1.234000 1.000000 dien
+1_Đại Cồ Việt, Bách Khoa, Hai Bà Trưng, Hà Nội, Vietnam|21.005627|105.843346|tungbt
+27_Giải Phóng, Đồng Tâm, Hai Bà Trưng, Hà Nội, Vietnam|21.003452|105.843216|tungbt
+Giảng_đường, Phố Vọng, Đồng Tâm, Hai Bà Trưng, Hà Nội, Vietnam|20.999928|105.842171|dien
+Tòa_nhà Việt - Nhật, Bệnh viện Bạch Mai, Phương Mai, Đống Đa, Hà Nội, Vietnam|21.002472|105.839981|dien
+16_Giáp Nhị, Thịnh Liệt, Hoàng Mai, Hà Nội, Vietnam|20.976427|105.843521|test
+6_AH1, Hoàng Liệt, Hoàng Mai, Hà Nội, Vietnam|20.965477|105.843399|test
