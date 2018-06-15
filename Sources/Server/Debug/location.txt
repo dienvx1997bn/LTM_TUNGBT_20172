@@ -17,3 +17,6 @@ Unnamed_Road, 0.000000 0.000000 Thường
 Tín, 0.000000 0.000000 Vietnam
 dasd 12.000000 1.200000 dien
 a 1.000000 -1.000000 dien
+Unnamed_Road, 0.000000 0.000000 Chương
+Mỹ, 0.000000 0.000000 Vietnam
+dien 1.234000 1.000000 dien

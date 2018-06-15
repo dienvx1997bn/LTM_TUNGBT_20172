@@ -1,6 +1,6 @@
 dien dien 1
-admin admin123 1
+admin admin123 0
 tungbt abc123 1
-test guessme 0
+test guessme 1
 test1 123 1
-test2 234 1
+test2 123 1

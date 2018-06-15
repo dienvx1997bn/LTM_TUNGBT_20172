@@ -59,7 +59,7 @@ struct currentUser {
 }currentUser[NUMB_SESS_MAX];
 
 // cau truc thong diep de user them dia diem yeu thich
-struct place {
+typedef struct place {
 	float longitude;
 	float latitude;
 	char name[NAME_LENGTH];
@@ -663,11 +663,10 @@ void makeResultListFriend(char *out, msgListFriend tempData[], int size) {
 	out[0] = NULL;
 	strcat(out,"+06 ");
 	int i = 0;
-	for (i = 0; i < size-1; i++) {
+	for (i = 0; i < size; i++) {
 		strcat(out, tempData[i].name);
 		strcat(out, "|");
 	}
-	strcat(out, tempData[i].name);
 	
 }
 
@@ -676,7 +675,7 @@ void makeResultList(char *out, struct location dataLocation[], int size) {
 	strcat(out, "+05 ");
 	char buff[5];
 	int i = 0;
-	for (i = 0; i < size - 1; i++) {
+	for (i = 0; i < size ; i++) {
 		strcat(out, dataLocation[i].place.name);
 		strcat(out, "|");
 		_itoa(dataLocation[i].place.latitude, buff, 10);
@@ -686,19 +685,13 @@ void makeResultList(char *out, struct location dataLocation[], int size) {
 		strcat(out, buff);
 		strcat(out, "$");
 	}
-	strcat(out, dataLocation[i].place.name);
-	strcat(out, "|");
-	_itoa(dataLocation[i].place.latitude, buff, 10);
-	strcat(out, buff);
-	strcat(out, "|");
-	_itoa(dataLocation[i].place.longitude, buff, 10);
-	strcat(out, buff);
+	
 }
 
 void makeResultTagFriend(char *out, struct place place, char sendUser[]) {
 	out[0] = NULL;
 	char buff[5];
-	strcat(out, "+08 ");
+	strcat(out, "NOTI ");
 
 	strcat(out, sendUser);
 	strcat(out, "|");
@@ -710,212 +703,3 @@ void makeResultTagFriend(char *out, struct place place, char sendUser[]) {
 	_itoa(place.longitude, buff, 10);
 	strcat(out, buff);
 }
-
-//main process
-int updateLoationDataLock = 0;
-int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
-	
-	message msg;
-	char out[DATA_BUFSIZE]; 
-	int length;
-
-	extractData(buff, &msg);
-	if (msg.length > DATA_BUFSIZE) {
-		
-		makeResult("-10", 3, msg, msgRep);
-		return 0;
-	}
-	//printf("index %d\n", idx);
-	printf("receive from socket %d :  type %d length %d data %s\n", connSock, msg.msgType, msg.length, msg.data);
-	
-	if (checkMsgType(msg.msgType) == UNKN) {
-		
-		makeResult("-10", 3, msg, msgRep);
-
-		return 0;
-	}
-
-	if (sess[idx].sessionStatus == 0) {
-		if (checkMsgType(msg.msgType) == USER ) {
-			if (checkUserOnline(msg.data) == 1) {
-				
-				makeResult("-31", 3, msg, msgRep);
-
-				return 0;
-			}
-			else {
-				sess[idx].connSock = connSock;
-				checkUserID(idx, msg.data, out);
-				
-				makeResult(out, 3, msg, msgRep);
-
-				return 0;
-			}
-		}
-		else {
-			
-			makeResult("-20", 3, msg, msgRep);
-
-			return 0;
-		}
-
-	}
-	else if (sess[idx].sessionStatus == 1) {
-		if (checkMsgType(msg.msgType) == PASS) {
-			if (checkUserOnline(currentUser[idx].data.userID) == 1) {
-				
-				makeResult("-31", 3, msg, msgRep);
-				
-				deleteCurrentSession(idx);
-				deleteCurrentUser(idx);
-				return 0;
-
-			}
-			
-			checkPass(idx, msg.data, out);
-			
-			makeResult(out, 3, msg, msgRep);
-
-			return 0;
-		}
-		else {
-			
-			makeResult("-20", 3, msg, msgRep);
-
-			return 0;
-		}
-	} 
-	else if (sess[idx].sessionStatus == 2) {
-		if (checkMsgType(msg.msgType == ADDP)) {
-		
-			place place;
-			place.latitude = 0;
-			place.longitude = 0;
-			
-			//giai nen msg.data o day
-			//memcpy(&place, msg.data, sizeof(place));
-			if (extractPlaceData(&place, msg.data) == 0) {
-				makeResult("-10", 3, msg, msgRep);
-
-				return 0;
-			}
-			//
-
-			printf("name %s latitude %f longitude %f\n", place.name, place.latitude, place.longitude);
-
-			if (place.latitude < 180 && place.longitude < 180 || strlen(place.name) > NAME_LENGTH || place.latitude == 0 || place.longitude == 0) {
-				if (addNewLocation(place.name, place.latitude, place.longitude, sess[idx].userID) == 0) {
-					
-					makeResult("-14", 3, msg, msgRep);
-
-					return 0;
-				}
-				while (updateLoationDataLock == 1);
-				updateLoationDataLock = 1;
-				updateLoationData(FILE_LOCATION);
-				updateLoationDataLock = 0;
-				
-				makeResult("+04", 3, msg, msgRep);
-
-				return 0;
-			}
-			else {
-				
-				makeResult("-24", 3, msg, msgRep);
-
-				return 0;
-			}
-			
-		}
-		else if (checkMsgType(msg.msgType) == LIST) {
-			char result[NUM_FAVORITE_PLACE_MAX][DATA_BUFSIZE];
-			int num;
-			char dataBuff[DATA_BUFSIZE];
-			
-			location temp[NUM_LOCATION_MAX];
-			getListFavoriteLocation(sess[idx].userID, &num, result);
-			location tempLocation[100];
-			place tempPlace[100];
-			for (int i = 0; i < num; i++) {
-				memcpy(&tempLocation[i], result[i], sizeof(location));
-				printf("list---- %f %s\n", tempLocation[i].place.latitude, tempLocation[i].place.name);
-				memcpy(&tempPlace[i].name, &tempLocation[i].place.name,NAME_LENGTH);
-				tempPlace[i].latitude = tempLocation[i].place.latitude;
-				tempPlace[i].longitude = tempLocation[i].place.longitude;
-			}
-			
-			//memcpy(out, &tempPlace, num * sizeof(place));
-			//length = num * sizeof(place);
-			makeResultList(out, tempLocation, num);
-			
-			makeResult(out, strlen(out), msg, msgRep);
-
-			return 0;
-		}
-		else if (checkMsgType(msg.msgType) == LIFR) {
-			struct msgListFriend tempData[NUMB_USER_MAX];
-			int i;
-			for (int i = 0; i < userIndex; i++) {
-				memcpy(&tempData[i], user[i].userID, NAME_LENGTH);
-			}
-			makeResultListFriend(out, tempData,userIndex);
-			makeResult(out, strlen(out), msg, msgRep);
-			msgRep->length = strlen(out);
-
-			return 0;
-		}
-		else if (checkMsgType(msg.msgType) == TAGF) {
-			//memcpy(&temp, msg.data, sizeof(ListTag));
-			//printf("tag friend: recvUser %s lat %f long %f\n", temp.recvUser, temp.place.latitude, temp.place.longitude);
-
-			printf("tag friend\n");
-			
-			TagMessage tempTagMsg;
-			TagRequest tempTagReq;
-			
-
-			//giai nen msg.data o day
-			//memcpy(&place, msg.data, sizeof(place));
-			if (extractTagRequestData(&tempTagReq, msg.data) == 0) {
-				makeResult("-10", 3, msg, msgRep);
-				return 0;
-			}
-
-			if (checkAvailUserID(tempTagReq.recvUser) == 0) {
-				makeResult("-27", 3, msg, msgRep);
-				return 0;
-			}
-
-			memcpy(&tempTagMsg.detail,&tempTagReq,sizeof(TagRequest));
-			strcpy(tempTagMsg.sendUser, currentUser[idx].data.userID);
-			
-			if (_beginthreadex(0, 0, tagThread, (void*)&tempTagMsg, 0, 0) == 0) {
-				makeResult("-17", 3, msg, msgRep);
-				return 0;
-			}
-
-			makeResult("+07", 3, msg, msgRep);
-
-			return 0;
-			
-		}
-
-		else if (checkMsgType(msg.msgType) == LOUT) {
-			logOut(idx, msg.data, out);
-			deleteCurrentSession(idx);
-			deleteCurrentUser(idx);
-			
-			makeResult("+03", 3, msg, msgRep);
-
-			return 0;
-		}
-		else {
-			
-			makeResult("-20", 3, msg, msgRep);
-
-			return 0;
-		}
-	}
-	return 0;
-}
-

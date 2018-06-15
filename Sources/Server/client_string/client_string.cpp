@@ -123,6 +123,10 @@ void errorDetail(char *buff) {
 	{
 		printf("This place was in your favorite places list\n");
 	}
+	else if (strcmp(buff, "-24") == 0)
+	{
+		printf("This place is not avail\n");
+	}
 	else
 	{
 		printf("Error\n");
