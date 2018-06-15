@@ -94,7 +94,6 @@ int checkUserOnline(char userID[]);
 unsigned __stdcall tagThread(void *prama) {
 	MsgTagMessage tagMsg;
 	memcpy(&tagMsg, prama, sizeof(MsgTagMessage));
-	printf("start tagThread\n");
 	while (checkUserOnline(tagMsg.detail.recvUser) == 0) {
 		Sleep(1000);
 		printf("waiting....user %s online \n", tagMsg.detail.recvUser);
