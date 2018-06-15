@@ -1,4 +1,4 @@
-
+﻿
 /*design protocol
      +---------+----------------------------------+------------------------------------------------------------------------+-------------------+
      |  STT    |    Command                       |    Return message                                                      |    Note           |
@@ -7,10 +7,11 @@
      |         |                                  |    -20: Protocol sequence is incorrect. Please check again.            |                   |
      +---------+----------------------------------+------------------------------------------------------------------------+-------------------+
      |    1    |    USER <userID>                 |    +01: Username is correct. Please send your password.                |    Username       |
-     |         |                                  |    -21: Username is incorrect. Please check again.      			   |				   |
-     |		   |								  |    -11: user blocked												   |				   |
-     |		   |								  |	   -31: user was already connected									   |				   |
-     |		   |								  |	   -41:client connected before										   |				   |		+---------+----------------------------------+------------------------------------------------------------------------+-------------------+
+     |         |                                  |    -21: Username is incorrect. Please check again.      		   |		       |
+     |	       |				  |    -11: Username is correct but user is blocked						   |		       |
+     |	       |				  |    -31: User was already connected				           |		       |
+     |	       |			          |    -41:client connected before					   |		       |
+     +---------+----------------------------------+------------------------------------------------------------------------+-------------------+
      |    2    |    PASS <password>               |    +02: Password is correct. Log in succecssfully.                     |    Password       |
      |         |                                  |    -12: Password is incorrect. Please check again.                     |                   |
      +---------+----------------------------------+------------------------------------------------------------------------+-------------------+ 
@@ -18,8 +19,8 @@
      |         |                                  |    -13: Account isn't logged in.                                       |                   |
      |         |                                  |         Please log in before doing that.                               |                   |
      +---------+----------------------------------+------------------------------------------------------------------------+-------------------+
-     |    4    |    ADDP -n "name"	              |    +04: Added place to your favorite places list.                      |    Add place      |
-     |         |         lat %f lng %f 		      |    -14: This place was in your favorite places list.                   |                   |
+     |    4    |    ADDP -n "name"	          |    +04: Added place to your favorite places list.                  	   |    Add place      |
+     |         |         -lat %f -lng %f          |    -14: This place was in your favorite places list.                   |                   |
      |         |                                  |         Please add another place.                                      |                   |
      |         |                                  |    -24: This place isn’t in the map. Please check again.               |                   |
      +---------+----------------------------------+------------------------------------------------------------------------+-------------------+ 
@@ -30,9 +31,8 @@
      |    7    |    TAGF <username> <place>		  |    +07: Tag successfully                                               |    Tag friends    |
      |         |                                  |    -17: Tag Error		                        					   |                   |
      |         |                                  |    -27: RecvUser is not avail							               |                   |
-     +---------+----------------------------------+------------------------------------------------------------------------+-------------------+ 
-     |    8    |    NOTI <username> <place>	      |    +08: Receive ok                                                     |                   |
-    
+     |+---------+----------------------------------+------------------------------------------------------------------------+-------------------+ 
+     |    8    |    NOTI <username> <place>	  |    +08: Receive ok                                                     |                   |    
      +---------+----------------------------------+------------------------------------------------------------------------+-------------------+
 */
 
