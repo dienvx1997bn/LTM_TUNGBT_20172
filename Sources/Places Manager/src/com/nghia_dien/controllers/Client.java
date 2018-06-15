@@ -207,7 +207,10 @@ public class Client {
             JOptionPane.showMessageDialog(null, "Successfully!!! ");
             return true;
         } else if (response.startsWith("-17")) {
-            JOptionPane.showMessageDialog(null, "Failed!!! ");
+            JOptionPane.showMessageDialog(null, username + " isn't online!!");
+            return false;
+        }else if (response.startsWith("-27")) {
+            JOptionPane.showMessageDialog(null, "Username is invalid!");
             return false;
         }
         return false;
