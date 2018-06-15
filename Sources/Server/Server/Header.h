@@ -2,19 +2,18 @@
 #include "FileIO.h"
 
 
-#define DATA_BUFSIZE 4000
+#define DATA_BUFSIZE 4000				
 
 #define NUMB_USER_MAX 500
 #define NUMB_SESS_MAX 500
 #define NUM_LOCATION_MAX 100
 #define NUM_FAVORITE_PLACE_MAX 100
-#define NAME_LENGTH 255
+#define NAME_LENGTH 500
 #define FILE_ACC "account.txt"
 #define FILE_LOCATION "location.txt"
 int userIndex = 0;	//number of user have in database
-int sessIndex = 0;	//number of session
-int numLocation = 0;
-
+int sessIndex = 0;	//number of session is connectting
+int numLocation = 0;	//number of favorite location have in file
 
 #define USER 1
 #define PASS 2
@@ -26,106 +25,88 @@ int numLocation = 0;
 #define NOTI 8
 #define UNKN 9
 
-//construct message 
-struct message {
+//construct message communicate
+struct Message {
 	int msgType;
 	int length;
 	char data[DATA_BUFSIZE - 8];
 };
 
-//sessions are connecting
-struct session {
+//array of sessions are connecting
+struct Session {
 	char userID[NAME_LENGTH];	//user id
-	SOCKET connSock;	//socket
-	sockaddr_in clientAddr;	//client address
-	int sessionStatus = 0;	//0-UNIDENT, 1-UNAUTH, 2-AUTH
-							//int isOnline = 0;	//1-user is alrealy connected else 0
-							//int isConnected = 0;	//1 if session connected before, else 0
-	int isConnected = 0;
+	SOCKET connSock;			//socket
+	sockaddr_in clientAddr;		//client address
+	int sessionStatus = 0;		//0-UNIDENT, 1-UNAUTH, 2-AUTH	
 }sess[NUMB_SESS_MAX];
 
-//construct user data
-struct user {
+//data of user 
+struct User {
 	char userID[NAME_LENGTH];
 	char passWord[NAME_LENGTH];
 	int status;			//0- block, 1- active
 }user[NUMB_USER_MAX];
 
-//data of current userID 
-struct currentUser {
-	struct user data;
-	int numError = 0;
+//data of current user who is connecting
+struct CurrentUser {
+	struct User data;
+	int numError = 0;			//if pass is wrong, numerr++
 	int isOnline = 0;
 }currentUser[NUMB_SESS_MAX];
 
-// cau truc thong diep de user them dia diem yeu thich
-typedef struct place {
+//detail of place
+typedef struct Place {
 	float longitude;
 	float latitude;
 	char name[NAME_LENGTH];
 };
 
-//chua thong tin dia diem yeu thich cua tat ca user trong csdl
-struct location {
-	struct place place;
+//save data of favorite location in file
+struct Location {
+	struct Place place;
 	char userID[NAME_LENGTH];
 }locat[NUM_LOCATION_MAX];
 
-
-
-struct msgListFriend {
+//construct data return which is result of LIFR message
+struct MsgListFriend {
 	char name[NAME_LENGTH];
 };
 
-struct ListTag {
-	struct place place;
+//save data of TAGF message request
+struct MsgTagRequest {
 	char recvUser[NAME_LENGTH];
+	struct Place place;
 }listTag[NUMB_USER_MAX];
 
-
-struct TagRequest {
-	char recvUser[NAME_LENGTH];
-	struct place place;
-};
-
-struct TagMessage {
-	struct TagRequest detail;
+//construct message for NOTI 
+struct MsgTagMessage {
+	struct MsgTagRequest detail;
 	char sendUser[NAME_LENGTH];
 };
 
 void increaseNumlocation();
-
-//HANDLE hThread;
-/////////////
-//DWORD WINAPI ThreadWaitingFunction()
-//{
-//
-//	// without this we can not exit msgloop
-//
-//	// do stuff - eg. start a msgloop
-//	printf("them tag friend");
-//	return 0;
-//
-//}
-////////////////
-void makeResultTagFriend(char *out, struct place place, char sendUser[]);
+void makeResultTagFriend(char *out, Place place, char sendUser[]);
 SOCKET findSock(char userID[]);
+int checkUserOnline(char userID[]);
 
-
+//init thread for sending noti to client
+//IN struct MsgTagMessage
 unsigned __stdcall tagThread(void *prama) {
-	TagMessage *tagMsg = (TagMessage*)prama;
-	SOCKET s = findSock(tagMsg->detail.recvUser);
-	if (s == -1) {
-		printf("recvUser not online\n");
-		return 0;	//error
-	}
+	MsgTagMessage tagMsg;
+	memcpy(&tagMsg, prama, sizeof(MsgTagMessage));
+	while (checkUserOnline(tagMsg.detail.recvUser) == 0) {
+		Sleep(1000);
+		printf("waiting....user %s online \n", tagMsg.detail.recvUser);
+	};		//waiting until user online
+	
+	SOCKET s = findSock(tagMsg.detail.recvUser);
 
-	printf("detail recvUser %s sendUser %s name %s lat %d lng %d\n", tagMsg->detail.recvUser, tagMsg->sendUser, tagMsg->detail.place.name,
-		tagMsg->detail.place.latitude, tagMsg->detail.place.longitude);
+
+	printf("detail recvUser %s sendUser %s name %s lat %f lng %f\n", tagMsg.detail.recvUser, tagMsg.sendUser, tagMsg.detail.place.name,
+		tagMsg.detail.place.latitude, tagMsg.detail.place.longitude);
 
 	char result[DATA_BUFSIZE];
-	makeResultTagFriend(result, tagMsg->detail.place, tagMsg->sendUser);
-
+	makeResultTagFriend(result, tagMsg.detail.place, tagMsg.sendUser);
 
 	if (send(s, result, strlen(result), 0) == SOCKET_ERROR) {
 		printf("error tag friend\n");
@@ -133,15 +114,17 @@ unsigned __stdcall tagThread(void *prama) {
 	}
 }
 
+//find Socket of user is connecting to server by userID 
 SOCKET findSock(char userID[]) {
 	for (int i = 0; i < userIndex; i++) {
-		if (strcmp(userID, sess[i].userID) == 0 && sess[i].isConnected == 1) {
+		if (strcmp(userID, sess[i].userID) == 0 && currentUser[i].isOnline == 1) {
 			return sess[i].connSock;
 		}
 	}
 	return -1;
 }
 
+//
 void readAccount(char *fileName) {
 	FILE *file;
 	//open file to read text
@@ -193,10 +176,10 @@ void updateAccountData(char *fileName) {
 	for (int i = 0; i < userIndex; i++) {
 		//put userID
 		fputs(user[i].userID, file);
-		fputc(' ', file);
+		fputc('|', file);
 		//put pass
 		fputs(user[i].passWord, file);
-		fputc(' ', file);
+		fputc('|', file);
 		//put status
 		fprintf(file, "%d", user[i].status);
 		if (i != userIndex - 1)
@@ -208,6 +191,9 @@ void updateAccountData(char *fileName) {
 	fclose(file);	//close file
 }
 
+void increaseNumlocation() {
+	numLocation += 1;
+}
 
 //read favorite location
 void readFavoriteLocation(char *fileName) {
@@ -270,6 +256,7 @@ void readFavoriteLocation(char *fileName) {
 	}
 }
 
+//update data
 void updateLoationData(char *fileName) {
 	
 	FILE *file;
@@ -277,13 +264,13 @@ void updateLoationData(char *fileName) {
 	for (int i = 0; i < numLocation; i++) {
 
 		fputs(locat[i].place.name, file);
-		fputc(' ', file);
+		fputc('|', file);
 
 		fprintf(file, "%f", locat[i].place.latitude);
-		fputc(' ', file);
+		fputc('|', file);
 
 		fprintf(file, "%f", locat[i].place.longitude);
-		fputc(' ', file);
+		fputc('|', file);
 
 		fputs(locat[i].userID, file);
 
@@ -293,7 +280,7 @@ void updateLoationData(char *fileName) {
 	fclose(file);	//close file
 }
 
-
+//find avail sessIndex for new session
 int newIndex() {
 	int i;
 	for (i = 0; i <= sessIndex; i++)
@@ -305,10 +292,20 @@ int newIndex() {
 	return sessIndex;
 }
 
+int findIndex(SOCKET s) {
+	int i;
+	for (i = 0; i <= sessIndex; i++) {
+		if (sess[i].connSock == s) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+//new session is connected
 void addNewSession(int idx, SOCKET connSock) {
 	sess[idx].connSock = connSock;
 }
-
 
 
 //check userID have in database or not
@@ -325,24 +322,25 @@ int checkAvailUserID(char userID[]) {
 	return 0;	//no have
 }
 
+
 //delete data of session[idx], which was disconnected
 //IN index of session
 void deleteCurrentSession(int idx) {
 	strcpy_s(sess[idx].userID, "");
 	sess[idx].connSock = 0;
 	sess[idx].sessionStatus = 0;
-	sess[idx].isConnected = 0;
 }
 
+//user is online or not
 int checkUserOnline(char userID[]) {
 	int i;
 	for (i = 0; i < userIndex; i++) {
 		if (strcmp(userID, currentUser[i].data.userID) == 0) {
 			if(currentUser[i].isOnline == 1)
-				return 1; //if have
+				return 1; //if online
 		}
 	}
-	return 0;	//no have
+	return 0;	//offline
 }
 
 //get information about current user in database and save to currentUser[idx]
@@ -364,6 +362,7 @@ void deleteCurrentUser(int idx) {
 	currentUser[idx].data.status = 0;
 	currentUser[idx].isOnline = 0;
 }
+
 // update information of user 
 void updateUser(int idx) {
 	int i;
@@ -376,28 +375,21 @@ void updateUser(int idx) {
 }
 
 //get message type
-//return 1-user, 2-pass, 3-logout else return 0
 int checkMsgType(int msgType) {
 	if(msgType >=0 && msgType < UNKN)
 		return msgType;
 	else return UNKN;
 }
 
-// change status of current session
-//IN index of session
+//IN index of session and status
 void changeStatusOfSession(int idx, int status) {
 	sess[idx].sessionStatus = status;
 }
 
-//copy data from buff to struct message
-void extractData(char buff[], message *msg) {
-	/*
-	msg->msgType = buff[0];
-	msg->length = buff[4];
-	memcpy(&msg->data, &buff[8], sizeof(message) - 8);
-	*/
+//copy data from buff receive to struct message
+void extractData(char buff[], Message *msg) {
 
-	char *data; // data la phan du lieu 	
+	char *data;					// data la phan du lieu 	
 
 	strtok_s(buff, " ", &data);
 
@@ -424,7 +416,7 @@ void extractData(char buff[], message *msg) {
 	else msg->msgType = UNKN;
 }
 
-int extractPlaceData(place *place, char data[]) {
+int extractPlaceData(Place *place, char data[]) {
 	char *placeName;
 	char *lat;
 	char *lng;
@@ -452,7 +444,7 @@ int extractPlaceData(place *place, char data[]) {
 	return 1;
 }
 
-int extractTagRequestData(TagRequest *tagReq, char data[]){
+int extractTagRequestData(MsgTagRequest *tagReq, char data[]){
 	char *recvUser;
 	char *placeName;
 	char *lat;
@@ -485,18 +477,7 @@ int extractTagRequestData(TagRequest *tagReq, char data[]){
 	return 1;
 }
 
-
-int findIndex(SOCKET s) {
-	int i;
-	for (i = 0; i <= sessIndex; i++) {
-		if (sess[i].connSock == s) {
-			return i;
-		}
-	}
-	return -1;
-}
-
-// process if msgType is userID message
+// process if msgType is userID 
 // idx index of this session
 // return 1 if no error, else return 0
 int checkUserID(int idx, char *data, char *out) {
@@ -536,9 +517,10 @@ int checkUserID(int idx, char *data, char *out) {
 	return 1;
 }
 
+
 // return 1 if no error, else return 0
 // idx index of this session
-int updateAccountDataLock = 0;
+int updateAccountDataLock = 0;		//user for sync data
 int checkPass(int idx, char *data, char *out) {
 
 	if (strcmp(currentUser[idx].data.passWord, data) == 0) {				//if password true
@@ -546,7 +528,6 @@ int checkPass(int idx, char *data, char *out) {
 		if (sess[idx].sessionStatus == 1) {
 			changeStatusOfSession(idx, 2);		//change status to nex step is AUTH
 
-			sess[idx].isConnected = 1;		//session is already connected
 			currentUser[idx].isOnline = 1;
 			memcpy(out, "+02\0", 3);
 		}
@@ -595,26 +576,21 @@ int logOut(int idx, char *data, char *out) {
 	return 1;
 }
 
-void increaseNumlocation() {
-	numLocation += 1;
-}
-
-
-//get list favorite
+//IN userID
+//OUT number of location
 void getListFavoriteLocation(char userID[],int *num, char result[][DATA_BUFSIZE]) {
 	int i = 0;
 	int count = 0;
 	for (i = 0; i < numLocation; i++) {
 		if (strcmp(userID, locat[i].userID) == 0) {
 			//printf("num %d %s %f %f %s\n", num, locat[i].name, locat[i].latitude, locat[i].longitude, locat[i].name);
-			memcpy(result[count], &locat[i], sizeof(location));
+			memcpy(result[count], &locat[i], sizeof(Location));
 			count++;
 		}
 	}
 	*num = count;
 }
 
-//add new favorite location
 int addNewLocation(char name[], float latitude, float longitude, char userID[]) {
 
 	int i;
@@ -639,27 +615,25 @@ int addNewLocation(char name[], float latitude, float longitude, char userID[]) 
 	return 1;
 };
 
-
-void addNewTagLocation(char sendUser[], char recvUser[], place place) {
+void addNewTagLocation(char sendUser[], char recvUser[], Place place) {
 	int i;
 	for (i = 0; i < NUMB_USER_MAX; i++) {
 		if (listTag[i].recvUser == NULL) {
 			//copy data
 			memcpy(&listTag[i].recvUser, recvUser, NAME_LENGTH);
-			memcpy(&listTag[i].place, &place, sizeof(struct place));
+			memcpy(&listTag[i].place, &place, sizeof(Place));
 		}
 	}
 }
 
-
-void makeResult(char errorCode[],int length,message msg, message *msgRep) {
+void makeResult(char errorCode[], int length, Message msg, Message *msgRep) {
 	msgRep->length = length;
 	msgRep->msgType = checkMsgType(msg.msgType);
 	memcpy(msgRep->data, errorCode, length);
 	msgRep->data[length] = '\0';
 }
 
-void makeResultListFriend(char *out, msgListFriend tempData[], int size) {
+void makeResultListFriend(char *out, MsgListFriend tempData[], int size) {
 	out[0] = NULL;
 	strcat(out,"+06 ");
 	int i = 0;
@@ -670,7 +644,7 @@ void makeResultListFriend(char *out, msgListFriend tempData[], int size) {
 	
 }
 
-void makeResultList(char *out, struct location dataLocation[], int size) {
+void makeResultListFavoriteLocation(char *out, Location dataLocation[], int size) {
 	out[0] = NULL;
 	strcat(out, "+05 ");
 	char buff[5];
@@ -688,7 +662,7 @@ void makeResultList(char *out, struct location dataLocation[], int size) {
 	
 }
 
-void makeResultTagFriend(char *out, struct place place, char sendUser[]) {
+void makeResultTagFriend(char *out, Place place, char sendUser[]) {
 	out[0] = NULL;
 	char buff[5];
 	strcat(out, "NOTI ");

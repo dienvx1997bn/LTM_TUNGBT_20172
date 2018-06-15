@@ -29,8 +29,8 @@ public class Client {
     private Listener listener;
 
     private Object lock = new Object();
-    private boolean waitReceive = true;
-    private String messageReceive;
+    private boolean waitReceive = true; //wait for receiving notification from server
+    private String messageReceive;  // received message from server
 
     public Client() {
 
@@ -48,25 +48,25 @@ public class Client {
         this.listener.start();
     }
 
-    private String readLineOld() throws IOException {
-        byte[] buff = new byte[2048];
-        StringBuilder sb = new StringBuilder();
-        int bytes = 0;
-
-        while (true) {
-            bytes = input.read(buff);
-            if (bytes < 0) {
-                break;
-            }
-            sb.append(new String(buff, 0, bytes));
-            if (input.available() <= 0) {
-                break;
-            }
-        }
-
-        System.out.println("<= " + sb.toString());
-        return sb.toString();
-    }
+//    private String readLineOld() throws IOException {
+//        byte[] buff = new byte[2048];
+//        StringBuilder sb = new StringBuilder();
+//        int bytes = 0;
+//
+//        while (true) {
+//            bytes = input.read(buff);
+//            if (bytes < 0) {
+//                break;
+//            }
+//            sb.append(new String(buff, 0, bytes));
+//            if (input.available() <= 0) {
+//                break;
+//            }
+//        }
+//
+//        System.out.println("<= " + sb.toString());
+//        return sb.toString();
+//    }
 
     public void setMsgReceive(String msg) {
         this.messageReceive = msg;
@@ -78,7 +78,11 @@ public class Client {
             this.lock.notify();
         }
     }
-
+ /*
+ * readLine() to read data from client to server
+ * parameters: not parameter 
+ * return a string
+ */  
     private String readLine() {
         try {
             synchronized (lock) {
@@ -93,6 +97,11 @@ public class Client {
         return messageReceive;
     }
 
+ /*
+ * sendLine() to send data from client to server
+ * parameters: a string 
+ * not return
+ */    
     private void sendLine(String line) throws IOException {
         if (socket == null) {
             throw new IOException("Please connect to server before sending data!");
@@ -108,7 +117,12 @@ public class Client {
             throw e;
         }
     }
-
+    
+ /*
+ * login() to process login message from server
+ * parameters: username (String) and password(String) 
+ * return a boolean value
+ */  
     public boolean login(String username, String password) throws IOException {
         if (user(username)) {
             if (password(password)) {
@@ -121,12 +135,17 @@ public class Client {
         }
     }
 
+/*
+ * user() to send command code USER to server and receive error code from server
+ * parameters: username (String)
+ * return a boolean value
+ */     
     private boolean user(String username) throws IOException {
         sendLine("USER " + username);
         String response = readLine();
         if (response.startsWith("+01")) {
             return true;
-        } else if (response.startsWith("-11")) { //TODO: add message error here
+        } else if (response.startsWith("-11")) {
             JOptionPane.showMessageDialog(null, "Account is blocked!");
             return false;
         } else if (response.startsWith("-21")) {
@@ -139,32 +158,47 @@ public class Client {
         return false;
     }
 
+/*
+ * password() to send command code PASS to server and receive error code from server
+ * parameters: password (String)
+ * return a boolean value
+ */ 
     private boolean password(String password) throws IOException {
         sendLine("PASS " + password);
         String response = readLine();
         if (response.startsWith("+02")) {
             return true;
-        } else if (response.startsWith("-12")) { //TODO: add message error here
+        } else if (response.startsWith("-12")) {
             JOptionPane.showMessageDialog(null, "Password is incorrect. Please check again.");
             return false;
         }
         return false;
     }
 
+/*
+ * logout() to send command code LOUT to server and receive error code from server
+ * parameters: not parameter
+ * return a boolean value
+ */     
     public boolean logout() throws IOException {
         sendLine("LOUT");
         String response = readLine();
         if (response.startsWith("+03")) {
             return true;
         } else if (response.startsWith("-13")) {
-            JOptionPane.showMessageDialog(null, "Account isn't logged in!");//TODO: add message error here
+            JOptionPane.showMessageDialog(null, "Account isn't logged in!");
             return false;
         }
         return false;
     }
 
-    public boolean addPlace(String name, float latitude, float longtitude) throws IOException {
-        sendLine("ADDP " + name + "|" + latitude + "|" + longtitude);
+/*
+ * addPlace() to send command code ADDP to server and receive error code from server
+ * parameters: placeName (String), latitude (float), longtitude (float)
+ * return a boolean value
+ */     
+    public boolean addPlace(String placeName, float latitude, float longtitude) throws IOException {
+        sendLine("ADDP " + placeName + "|" + latitude + "|" + longtitude);
         String response = readLine();
         if (response.startsWith("+04")) {
             return true;
@@ -177,19 +211,33 @@ public class Client {
         }
         return false;
     }
-
+    
+/*
+ * listPlaces() to send command code LIST to server and receive error code from server
+ * parameters: not parameters
+ * return a string array
+ */ 
     public String[] listPlaces() throws IOException {
         sendLine("LIST");
         String response = readLine();
         String t1 = response.substring(response.indexOf(" ") + 1);
         String[] t2 = t1.split("\\$");
         if (response.startsWith("+05")) {
-            return response.substring(response.indexOf(" ") + 1).split("\\$");
+            if(response.length() <= 3){
+                JOptionPane.showMessageDialog(null, "Your places list is empty.");
+                return null;
+            }else{
+                return response.substring(response.indexOf(" ") + 1).split("\\$");
+            }
         }
         return null;
     }
 
-
+/*
+ * listFriends() to send command code LIFR to server and receive error code from server
+ * parameters: not parameters
+ * return a string array
+ */
     public String[] listFriends() throws IOException {
         sendLine("LIFR");
         String response = readLine();
@@ -199,6 +247,11 @@ public class Client {
         return null;
     }
 
+/*
+ * tagFriend() to send command code TAGF to server and receive error code from server
+ * parameters: username(String), place(String), latitude(float), longtitude(float)
+ * return a boolean value
+ */    
     public boolean tagFriend(String username, String place, float latitude, float longtitude) throws IOException {
         sendLine("TAGF " + username + "|" + place + "|" + latitude + "|" + longtitude);
         String response = readLine();
@@ -215,6 +268,11 @@ public class Client {
         return false;
     }
 
+/*
+ * disconnect() to close socket and disconnect to server
+ * parameters: username(String), place(String), latitude(float), longtitude(float)
+ * not return
+ */   
     public void disconnect() {
         try {
             logout();

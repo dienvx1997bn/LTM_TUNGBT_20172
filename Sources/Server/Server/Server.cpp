@@ -33,41 +33,7 @@ typedef struct {
 
 
 unsigned __stdcall serverWorkerThread(LPVOID CompletionPortID);
-int  process(SOCKET connSock, int idx, char buff[], message *msgRep);
-
-
-
-///////////////
-//DWORD WINAPI ThreadWaitingFunction(LPVOID lpParameter)
-//{
-//
-//	// without this we can not exit msgloop
-//
-//	// do stuff - eg. start a msgloop
-//	printf("-");
-//	return 0;
-//
-//}
-////////////////
-//unsigned __stdcall notiThread(void *param) {
-//	while (1) {
-//		///////
-//		// CreateThreadEx
-//		DWORD dwThread;
-//		HANDLE hThread = CreateThread(NULL, (DWORD)NULL,
-//			(LPTHREAD_START_ROUTINE)ThreadWaitingFunction,
-//			(LPVOID)NULL, (DWORD)NULL, &dwThread);
-//
-//		// suspend main thread until new thread completes
-//		WaitForSingleObject(hThread, INFINITE);
-//		///////
-//
-//		for (int i = 0; i < 100000000; i++);
-//		printf(".");
-//
-//	}
-//}
-
+int  process(SOCKET connSock, int idx, char buff[], Message *msgRep);
 
 
 
@@ -94,12 +60,6 @@ int main(int argc, char **argv) {
 
 	printf("Server started!\n");
 
-	////
-	//_beginthreadex(0, 0, notiThread, (void*)NULL, 0, 0);
-	////
-
-
-	//memset(listTag, 0, sizeof(ListTag)*NUMB_USER_MAX);
 
 	// Step 1: Setup an I/O completion port
 	if ((completionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0)) == NULL) {
@@ -200,7 +160,7 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 	LPPER_IO_OPERATION_DATA perIoData;
 	DWORD flags;
 
-	message msgRep;
+	Message msgRep;
 	char result[DATA_BUFSIZE];
 	msgRep.length = 0;
 	
@@ -314,55 +274,56 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 
 //main process
 int updateLoationDataLock = 0;
-int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
+int  process(SOCKET connSock, int idx, char buff[], Message *msgRep) {
 
-	message msg;
-	memset(&msg, 0, sizeof(message));
+	Message msg;
+	memset(&msg, 0, sizeof(Message));
 	char out[DATA_BUFSIZE];
 	int length;
 
+	
 	extractData(buff, &msg);
+	
 	if (msg.length > DATA_BUFSIZE) {
 
 		makeResult("-10", 3, msg, msgRep);
 		return 0;
 	}
-	//printf("index %d\n", idx);
+
 	printf("receive from socket %d :  type %d length %d data %s\n", connSock, msg.msgType, msg.length, msg.data);
 
-	if (checkMsgType(msg.msgType) == UNKN) {
+	if (checkMsgType(msg.msgType) == UNKN) {			//message can not be defined
 
 		makeResult("-10", 3, msg, msgRep);
 
 		return 0;
 	}
 
-	if (sess[idx].sessionStatus == 0) {
+	if (sess[idx].sessionStatus == 0) {					//session 0
 		if (checkMsgType(msg.msgType) == USER) {
-			if (checkUserOnline(msg.data) == 1) {
+			if (checkUserOnline(msg.data) == 1) {		//if user was online
 
 				makeResult("-31", 3, msg, msgRep);
 
 				return 0;
 			}
-			else {
-				sess[idx].connSock = connSock;
-				checkUserID(idx, msg.data, out);
+			else {										//user haven't been logged in yet
+				addNewSession(idx, connSock);
+				checkUserID(idx, msg.data, out);		
 
 				makeResult(out, 3, msg, msgRep);
 
 				return 0;
 			}
 		}
-		else {
+		else {											//message can not be defined
 
 			makeResult("-20", 3, msg, msgRep);
-
 			return 0;
 		}
 
 	}
-	else if (sess[idx].sessionStatus == 1) {
+	else if (sess[idx].sessionStatus == 1) {			//session 1
 		if (checkMsgType(msg.msgType) == PASS) {
 			if (checkUserOnline(currentUser[idx].data.userID) == 1) {
 
@@ -380,38 +341,38 @@ int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 
 			return 0;
 		}
-		else {
+		else {											//message can not be defined
 
 			makeResult("-20", 3, msg, msgRep);
 
 			return 0;
 		}
-	}
-	else if (sess[idx].sessionStatus == 2) {
+	}	
+	else if (sess[idx].sessionStatus == 2) {			//session 1
 		if (checkMsgType(msg.msgType == ADDP)) {
 
-			place place;
+			Place place;
 			place.latitude = 0;
 			place.longitude = 0;
 
-			//giai nen msg.data o day
-			//memcpy(&place, msg.data, sizeof(place));
 			if (extractPlaceData(&place, msg.data) == 0) {
 				makeResult("-10", 3, msg, msgRep);
 
 				return 0;
 			}
-			//
+			
 
 			printf("name %s latitude %f longitude %f\n", place.name, place.latitude, place.longitude);
 
 			if (place.latitude < 180 && place.longitude < 180 && strlen(place.name) < NAME_LENGTH && place.latitude >= 0 && place.longitude >= 0) {
-				if (addNewLocation(place.name, place.latitude, place.longitude, sess[idx].userID) == 0) {
+				if (addNewLocation(place.name, place.latitude, place.longitude, sess[idx].userID) == 0) {	//add new favorite lovation
 
 					makeResult("-14", 3, msg, msgRep);
 
 					return 0;
 				}
+
+				//update data location
 				while (updateLoationDataLock == 1);
 				updateLoationDataLock = 1;
 				updateLoationData(FILE_LOCATION);
@@ -421,7 +382,7 @@ int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 
 				return 0;
 			}
-			else {
+			else {										
 
 				makeResult("-24", 3, msg, msgRep);
 
@@ -434,27 +395,25 @@ int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 			int num;
 			char dataBuff[DATA_BUFSIZE];
 
-			location temp[NUM_LOCATION_MAX];
+			Location temp[NUM_LOCATION_MAX];
 			getListFavoriteLocation(sess[idx].userID, &num, result);
 
 			if (num == 0) {
-				makeResult("+06 ", 3,msg, msgRep);
+				makeResult("+05 ", 3,msg, msgRep);
 				return 0;
 			}
 			else {
-				location tempLocation[100];
-				place tempPlace[100];
+				Location tempLocation[100];
+				Place tempPlace[100];
 				for (int i = 0; i < num; i++) {
-					memcpy(&tempLocation[i], result[i], sizeof(location));
+					memcpy(&tempLocation[i], result[i], sizeof(Location));
 					printf("list---- %f %s\n", tempLocation[i].place.latitude, tempLocation[i].place.name);
 					memcpy(&tempPlace[i].name, &tempLocation[i].place.name, NAME_LENGTH);
 					tempPlace[i].latitude = tempLocation[i].place.latitude;
 					tempPlace[i].longitude = tempLocation[i].place.longitude;
 				}
 
-				//memcpy(out, &tempPlace, num * sizeof(place));
-				//length = num * sizeof(place);
-				makeResultList(out, tempLocation, num);
+				makeResultListFavoriteLocation(out, tempLocation, num);
 
 				makeResult(out, strlen(out), msg, msgRep);
 
@@ -462,10 +421,10 @@ int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 			}
 		}
 		else if (checkMsgType(msg.msgType) == LIFR) {
-			struct msgListFriend tempData[NUMB_USER_MAX];
+			struct MsgListFriend tempData[NUMB_USER_MAX];
 			int i, num = 0;
 			for (int i = 0; i <= sessIndex; i++) {
-				if (sess[i].isConnected == 1) {
+				if (currentUser[i].isOnline == 1) {
 					memcpy(&tempData[num], sess[i].userID, NAME_LENGTH);
 					num++;
 				}
@@ -477,17 +436,12 @@ int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 			return 0;
 		}
 		else if (checkMsgType(msg.msgType) == TAGF) {
-			//memcpy(&temp, msg.data, sizeof(ListTag));
-			//printf("tag friend: recvUser %s lat %f long %f\n", temp.recvUser, temp.place.latitude, temp.place.longitude);
 
-			printf("tag friend\n");
+			MsgTagMessage tempTagMsg;
+			MsgTagRequest tempTagReq;
 
-			TagMessage tempTagMsg;
-			TagRequest tempTagReq;
+			HANDLE hThread;
 
-
-			//giai nen msg.data o day
-			//memcpy(&place, msg.data, sizeof(place));
 			if (extractTagRequestData(&tempTagReq, msg.data) == 0) {
 				makeResult("-10", 3, msg, msgRep);
 				return 0;
@@ -498,18 +452,14 @@ int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 				return 0;
 			}
 
-			memcpy(&tempTagMsg.detail, &tempTagReq, sizeof(TagRequest));
+			memcpy(&tempTagMsg.detail, &tempTagReq, sizeof(MsgTagRequest));
 			strcpy(tempTagMsg.sendUser, currentUser[idx].data.userID);
 
-			if (_beginthreadex(0, 0, tagThread, (void*)&tempTagMsg, 0, 0) == 0) {
-				makeResult("-17", 3, msg, msgRep);
-				return 0;
-			}
+			_beginthreadex(0, 0, tagThread, (void*)&tempTagMsg, 0, 0);
+			
 
 			makeResult("+07", 3, msg, msgRep);
-
 			return 0;
-
 		}
 
 		else if (checkMsgType(msg.msgType) == LOUT) {
@@ -518,13 +468,11 @@ int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
 			deleteCurrentUser(idx);
 
 			makeResult("+03", 3, msg, msgRep);
-
 			return 0;
 		}
 		else {
 
 			makeResult("-20", 3, msg, msgRep);
-
 			return 0;
 		}
 	}

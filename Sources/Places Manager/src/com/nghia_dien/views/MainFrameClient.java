@@ -35,6 +35,7 @@ public class MainFrameClient extends javax.swing.JFrame {
      */
     public MainFrameClient() {
         initComponents();
+        this.setLocationRelativeTo(null);
     }
 
     /**
@@ -220,11 +221,6 @@ public class MainFrameClient extends javax.swing.JFrame {
             }
         });
 
-        listPlaces.setModel(new javax.swing.AbstractListModel<String>() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public String getElementAt(int i) { return strings[i]; }
-        });
         jScrollPane1.setViewportView(listPlaces);
 
         btnListFriends.setFont(new java.awt.Font("Tahoma", 1, 13)); // NOI18N
@@ -352,6 +348,10 @@ public class MainFrameClient extends javax.swing.JFrame {
         int serverPort;
         try {
             serverPort = Integer.parseInt(txtPort.getText().trim());
+            if(serverPort > 65535 || serverPort <= 0){
+                JOptionPane.showMessageDialog(null, "Server port is incorrect. Please check again!!!");
+                return;
+            }
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, "Please check server ip or server port again!");
             return;
@@ -379,6 +379,7 @@ public class MainFrameClient extends javax.swing.JFrame {
                 btnPlaceList.setEnabled(true);
                 btnListFriends.setEnabled(true);
             }
+            
         } catch (IOException ex) {
             Logger.getLogger(MainFrameClient.class.getName()).log(Level.SEVERE, null, ex);
             return;
@@ -446,6 +447,10 @@ public class MainFrameClient extends javax.swing.JFrame {
     private void btnPlaceListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPlaceListActionPerformed
         try {
             String[] places = this.client.listPlaces();
+            if(places[0].equals(0)){
+                JOptionPane.showMessageDialog(null, "Your places list is empty.");
+                return;
+            }
             DefaultListModel listModel = new DefaultListModel();
             for (String place : places) {
                 String[] info = place.split("\\|");
@@ -526,6 +531,7 @@ public class MainFrameClient extends javax.swing.JFrame {
                 new MainFrameClient().setVisible(true);
             }
         });
+
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -558,6 +564,11 @@ public class MainFrameClient extends javax.swing.JFrame {
     private javax.swing.JTextField txtUsername;
     // End of variables declaration//GEN-END:variables
 
+/*
+ * showMap() to display a map from Google Map Api which uses Jxbrowser Library
+ * parameters: not parameter
+ * not return
+ */  
     public void showMap() {
         browser = new Browser();
         browser.addScriptContextListener(new ScriptContextAdapter() {
@@ -575,25 +586,15 @@ public class MainFrameClient extends javax.swing.JFrame {
             @Override
             public void invoke(Browser t) {
                 browser.loadURL("C:\\Users\\HP Zbook 15\\Desktop\\Places Manager\\src\\com\\nghia_dien\\resources\\map.html");
-
             }
         });
-//       browser.executeJavaScriptAndReturnValue(
-//                "map.addListener('click', function(e) {\n" +
-//                        "placeMarker(e.latLng, map);\n" +
-//                        "});\n" +
-//                        "\n" +
-//                        "function placeMarker(position, map) {\n" +
-//                        "        var marker = new google.maps.Marker({\n" +
-//                        "        position: position,\n" +
-//                        "        map: map,\n" +
-//                        "        title:'test point',\n " +
-//                        "    });\n" +
-//                        "    map.panTo(position);\n" +
-//                        "    window.java.onMarkerAdded(position);" +
-//                        "}");
     }
 
+/*
+ *onMarkeerAdded() to get place detail
+ * parameters: not parameter
+ * not return
+ */    
     public static class JavaCallback {
 
         public void onMarkerAdded(JSObject position) {

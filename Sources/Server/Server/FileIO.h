@@ -1,7 +1,8 @@
 #pragma once
 
 //read a word from file
-//OUT word
+//IN a pointer into file
+//OUT word 
 void readWord(FILE *file, char *word) {
 	int idx = 0;
 	char ch;
@@ -10,7 +11,7 @@ void readWord(FILE *file, char *word) {
 	//read a word
 	do {
 		ch = fgetc(file);	//read a char from file
-		if (ch == '\n' || ch == EOF || ch == ' ') {
+		if (ch == '\n' || ch == EOF || ch == '|') {
 			//if (ch == EOF) word[0] = EOF;
 			break;
 		}
