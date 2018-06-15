@@ -1,5 +1,6 @@
 
 //#define _WINSOCK_DEPRECATED_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
 
 #include <winsock2.h>
 #include <windows.h>
@@ -9,12 +10,11 @@
 #include "Header.h"
 
 #pragma comment(lib, "Ws2_32.lib")
+#pragma warning(disable:4996)
 
 #define RECEIVE 0
 #define SEND 1
-#define BUFF_SIZE_RESULT 3
 
-int index;
 
 // Structure definition
 typedef struct {
@@ -33,9 +33,45 @@ typedef struct {
 
 
 unsigned __stdcall serverWorkerThread(LPVOID CompletionPortID);
-unsigned __stdcall notiThread(LPVOID completionPortID);
+int  process(SOCKET connSock, int idx, char buff[], message *msgRep);
 
-int main(int argc, char **argv) {
+
+
+///////////////
+//DWORD WINAPI ThreadWaitingFunction(LPVOID lpParameter)
+//{
+//
+//	// without this we can not exit msgloop
+//
+//	// do stuff - eg. start a msgloop
+//	printf("-");
+//	return 0;
+//
+//}
+////////////////
+//unsigned __stdcall notiThread(void *param) {
+//	while (1) {
+//		///////
+//		// CreateThreadEx
+//		DWORD dwThread;
+//		HANDLE hThread = CreateThread(NULL, (DWORD)NULL,
+//			(LPTHREAD_START_ROUTINE)ThreadWaitingFunction,
+//			(LPVOID)NULL, (DWORD)NULL, &dwThread);
+//
+//		// suspend main thread until new thread completes
+//		WaitForSingleObject(hThread, INFINITE);
+//		///////
+//
+//		for (int i = 0; i < 100000000; i++);
+//		printf(".");
+//
+//	}
+//}
+
+
+
+
+int main(int argc, char **argv) { 
 
 	SOCKADDR_IN serverAddr;
 	SOCKET listenSock, acceptSock;
@@ -53,9 +89,17 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	readFile(FILE_NAME);
+	readAccount(FILE_ACC);
+	readFavoriteLocation(FILE_LOCATION);
 
 	printf("Server started!\n");
+
+	////
+	//_beginthreadex(0, 0, notiThread, (void*)NULL, 0, 0);
+	////
+
+
+	//memset(listTag, 0, sizeof(ListTag)*NUMB_USER_MAX);
 
 	// Step 1: Setup an I/O completion port
 	if ((completionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0)) == NULL) {
@@ -69,11 +113,12 @@ int main(int argc, char **argv) {
 	// Step 3: Create worker threads based on the number of processors available on the
 	// system. Create two worker threads for each processor	
 	for (int i = 0; i < (int)systemInfo.dwNumberOfProcessors * 2; i++) {
-		// Create a server worker thread and pass the completion port to the thread
+		//Create a server worker thread and pass the completion port to the thread
 		if (_beginthreadex(0, 0, serverWorkerThread, (void*)completionPort, 0, 0) == 0) {
 			printf("Create thread failed with error %d\n", GetLastError());
 			return 1;
 		}
+	
 	}
 
 	// Step 4: Create a listening socket
@@ -105,8 +150,6 @@ int main(int argc, char **argv) {
 			printf("WSAAccept() failed with error %d\n", WSAGetLastError());
 			return 1;
 		}
-		index = addNewSession();
-
 		// Step 6: Create a socket information structure to associate with the socket
 		if ((perHandleData = (LPPER_HANDLE_DATA)GlobalAlloc(GPTR, sizeof(PER_HANDLE_DATA))) == NULL) {
 			printf("GlobalAlloc() failed with error %d\n", GetLastError());
@@ -116,6 +159,9 @@ int main(int argc, char **argv) {
 		// Step 7: Associate the accepted socket with the original completion port
 		printf("Socket number %d got connected...\n", acceptSock);
 		perHandleData->socket = acceptSock;
+
+		addNewSession(newIndex(), acceptSock);
+
 		if (CreateIoCompletionPort((HANDLE)acceptSock, completionPort, (DWORD)perHandleData, 0) == NULL) {
 			printf("CreateIoCompletionPort() failed with error %d\n", GetLastError());
 		return 1;
@@ -154,21 +200,23 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 	LPPER_IO_OPERATION_DATA perIoData;
 	DWORD flags;
 
-	char result[2048];
-	//result = (char*)calloc(4, 4);
-	//result = NULL;
-	int idx = index;
-
+	message msgRep;
+	char result[DATA_BUFSIZE];
+	msgRep.length = 0;
+	
 
 	while (TRUE) {
-		if (GetQueuedCompletionStatus(completionPort, &transferredBytes,
-			(LPDWORD)&perHandleData, (LPOVERLAPPED *)&perIoData, INFINITE) == 0) {
+		int resultGetQueuedCompletionStatus = GetQueuedCompletionStatus(completionPort, &transferredBytes,
+			(LPDWORD)&perHandleData, (LPOVERLAPPED *)&perIoData, INFINITE);
+		int idx = findIndex(perHandleData->socket);
+		if (resultGetQueuedCompletionStatus == 0) {
 			printf("GetQueuedCompletionStatus() failed with error %d\n", GetLastError());
 			deleteCurrentSession(idx);
 			deleteCurrentUser(idx);
 			//return 0;
 			continue;
 		}
+
 		// Check to see if an error has occurred on the socket and if so
 		// then close the socket and cleanup the SOCKET_INFORMATION structure
 		// associated with the socket
@@ -193,20 +241,34 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 			perIoData->recvBytes = transferredBytes;
 			perIoData->sentBytes = 0;
 			perIoData->operation = SEND;
-			process(perHandleData->socket, idx, perIoData->buffer, result);
-			printf("\socket %d  length %d result %s\n",perHandleData->socket,strlen(result), result);
+
+			perIoData->buffer[perIoData->recvBytes] = 0;
+
+			process(perHandleData->socket, idx, perIoData->buffer, &msgRep);
+
+			//msgRep.data[msgRep.length] = 0;
+			//printf("lengthresult %d\n", lengthResult);
+			//lengthResult = strlen(result);
+			
+			//memcpy(result, &msgRep, DATA_BUFSIZE);
+			//memcpy(result, &msgRep.data, msgRep.length);
+			memset(result, 0, DATA_BUFSIZE);
+			memcpy(result, msgRep.data, DATA_BUFSIZE);
+			msgRep.data[msgRep.length] = 0;
+			printf("\socket %d  length %d result \"%s\"\n", perHandleData->socket, msgRep.length, result);
+
 		}
 		else if (perIoData->operation == SEND) {
 			perIoData->sentBytes += transferredBytes;
 		}
 
-		if (perIoData->sentBytes < BUFF_SIZE_RESULT) {
+		if (perIoData->sentBytes < msgRep.length) {
 			// Post another WSASend() request.
 			// Since WSASend() is not guaranteed to send all of the bytes requested,
 			// continue posting WSASend() calls until all received bytes are sent.
 			ZeroMemory(&(perIoData->overlapped), sizeof(OVERLAPPED));
 			perIoData->dataBuff.buf = result + perIoData->sentBytes;
-			perIoData->dataBuff.len = BUFF_SIZE_RESULT - perIoData->sentBytes;
+			perIoData->dataBuff.len = msgRep.length - perIoData->sentBytes;
 			perIoData->operation = SEND;
 
 			if (WSASend(perHandleData->socket,
@@ -221,6 +283,7 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 					return 0;
 				}
 			}
+			printf("transfer bytes %d\n", transferredBytes); //co dong nay thi k loi nhan du lieu tren client
 		}
 		else {
 			// No more bytes to send post another WSARecv() request
@@ -247,6 +310,224 @@ unsigned __stdcall serverWorkerThread(LPVOID completionPortID)
 	}
 }
 
-unsigned __stdcall notiThread(LPVOID completionPortID) {
+
+
+//main process
+int updateLoationDataLock = 0;
+int  process(SOCKET connSock, int idx, char buff[], message *msgRep) {
+
+	message msg;
+	memset(&msg, 0, sizeof(message));
+	char out[DATA_BUFSIZE];
+	int length;
+
+	extractData(buff, &msg);
+	if (msg.length > DATA_BUFSIZE) {
+
+		makeResult("-10", 3, msg, msgRep);
+		return 0;
+	}
+	//printf("index %d\n", idx);
+	printf("receive from socket %d :  type %d length %d data %s\n", connSock, msg.msgType, msg.length, msg.data);
+
+	if (checkMsgType(msg.msgType) == UNKN) {
+
+		makeResult("-10", 3, msg, msgRep);
+
+		return 0;
+	}
+
+	if (sess[idx].sessionStatus == 0) {
+		if (checkMsgType(msg.msgType) == USER) {
+			if (checkUserOnline(msg.data) == 1) {
+
+				makeResult("-31", 3, msg, msgRep);
+
+				return 0;
+			}
+			else {
+				sess[idx].connSock = connSock;
+				checkUserID(idx, msg.data, out);
+
+				makeResult(out, 3, msg, msgRep);
+
+				return 0;
+			}
+		}
+		else {
+
+			makeResult("-20", 3, msg, msgRep);
+
+			return 0;
+		}
+
+	}
+	else if (sess[idx].sessionStatus == 1) {
+		if (checkMsgType(msg.msgType) == PASS) {
+			if (checkUserOnline(currentUser[idx].data.userID) == 1) {
+
+				makeResult("-31", 3, msg, msgRep);
+
+				deleteCurrentSession(idx);
+				deleteCurrentUser(idx);
+				return 0;
+
+			}
+
+			checkPass(idx, msg.data, out);
+
+			makeResult(out, 3, msg, msgRep);
+
+			return 0;
+		}
+		else {
+
+			makeResult("-20", 3, msg, msgRep);
+
+			return 0;
+		}
+	}
+	else if (sess[idx].sessionStatus == 2) {
+		if (checkMsgType(msg.msgType == ADDP)) {
+
+			place place;
+			place.latitude = 0;
+			place.longitude = 0;
+
+			//giai nen msg.data o day
+			//memcpy(&place, msg.data, sizeof(place));
+			if (extractPlaceData(&place, msg.data) == 0) {
+				makeResult("-10", 3, msg, msgRep);
+
+				return 0;
+			}
+			//
+
+			printf("name %s latitude %f longitude %f\n", place.name, place.latitude, place.longitude);
+
+			if (place.latitude < 180 && place.longitude < 180 && strlen(place.name) < NAME_LENGTH && place.latitude >= 0 && place.longitude >= 0) {
+				if (addNewLocation(place.name, place.latitude, place.longitude, sess[idx].userID) == 0) {
+
+					makeResult("-14", 3, msg, msgRep);
+
+					return 0;
+				}
+				while (updateLoationDataLock == 1);
+				updateLoationDataLock = 1;
+				updateLoationData(FILE_LOCATION);
+				updateLoationDataLock = 0;
+
+				makeResult("+04", 3, msg, msgRep);
+
+				return 0;
+			}
+			else {
+
+				makeResult("-24", 3, msg, msgRep);
+
+				return 0;
+			}
+
+		}
+		else if (checkMsgType(msg.msgType) == LIST) {
+			char result[NUM_FAVORITE_PLACE_MAX][DATA_BUFSIZE];
+			int num;
+			char dataBuff[DATA_BUFSIZE];
+
+			location temp[NUM_LOCATION_MAX];
+			getListFavoriteLocation(sess[idx].userID, &num, result);
+
+			if (num == 0) {
+				makeResult("+06 ", 3,msg, msgRep);
+				return 0;
+			}
+			else {
+				location tempLocation[100];
+				place tempPlace[100];
+				for (int i = 0; i < num; i++) {
+					memcpy(&tempLocation[i], result[i], sizeof(location));
+					printf("list---- %f %s\n", tempLocation[i].place.latitude, tempLocation[i].place.name);
+					memcpy(&tempPlace[i].name, &tempLocation[i].place.name, NAME_LENGTH);
+					tempPlace[i].latitude = tempLocation[i].place.latitude;
+					tempPlace[i].longitude = tempLocation[i].place.longitude;
+				}
+
+				//memcpy(out, &tempPlace, num * sizeof(place));
+				//length = num * sizeof(place);
+				makeResultList(out, tempLocation, num);
+
+				makeResult(out, strlen(out), msg, msgRep);
+
+				return 0;
+			}
+		}
+		else if (checkMsgType(msg.msgType) == LIFR) {
+			struct msgListFriend tempData[NUMB_USER_MAX];
+			int i, num = 0;
+			for (int i = 0; i <= sessIndex; i++) {
+				if (sess[i].isConnected == 1) {
+					memcpy(&tempData[num], sess[i].userID, NAME_LENGTH);
+					num++;
+				}
+			}
+			makeResultListFriend(out, tempData, num);
+			makeResult(out, strlen(out), msg, msgRep);
+			msgRep->length = strlen(out);
+
+			return 0;
+		}
+		else if (checkMsgType(msg.msgType) == TAGF) {
+			//memcpy(&temp, msg.data, sizeof(ListTag));
+			//printf("tag friend: recvUser %s lat %f long %f\n", temp.recvUser, temp.place.latitude, temp.place.longitude);
+
+			printf("tag friend\n");
+
+			TagMessage tempTagMsg;
+			TagRequest tempTagReq;
+
+
+			//giai nen msg.data o day
+			//memcpy(&place, msg.data, sizeof(place));
+			if (extractTagRequestData(&tempTagReq, msg.data) == 0) {
+				makeResult("-10", 3, msg, msgRep);
+				return 0;
+			}
+
+			if (checkAvailUserID(tempTagReq.recvUser) == 0) {
+				makeResult("-27", 3, msg, msgRep);
+				return 0;
+			}
+
+			memcpy(&tempTagMsg.detail, &tempTagReq, sizeof(TagRequest));
+			strcpy(tempTagMsg.sendUser, currentUser[idx].data.userID);
+
+			if (_beginthreadex(0, 0, tagThread, (void*)&tempTagMsg, 0, 0) == 0) {
+				makeResult("-17", 3, msg, msgRep);
+				return 0;
+			}
+
+			makeResult("+07", 3, msg, msgRep);
+
+			return 0;
+
+		}
+
+		else if (checkMsgType(msg.msgType) == LOUT) {
+			logOut(idx, msg.data, out);
+			deleteCurrentSession(idx);
+			deleteCurrentUser(idx);
+
+			makeResult("+03", 3, msg, msgRep);
+
+			return 0;
+		}
+		else {
+
+			makeResult("-20", 3, msg, msgRep);
+
+			return 0;
+		}
+	}
 	return 0;
 }
+
