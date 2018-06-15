@@ -393,7 +393,7 @@ public class MainFrameClient extends javax.swing.JFrame {
 
     private void btnDisconnectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDisconnectActionPerformed
         this.client.disconnect();
-
+        JOptionPane.showMessageDialog(null, "Log out successfully!!! ");
         btnConnect.setEnabled(true);
         btnDisconnect.setEnabled(false);
         btnConnectStatus.setIcon(new ImageIcon("src/com/nghia_dien/resources/fail.png"));

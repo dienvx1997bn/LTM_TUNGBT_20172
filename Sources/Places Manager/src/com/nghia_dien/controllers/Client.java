@@ -204,12 +204,10 @@ public class Client {
         sendLine("TAGF " + username + "|" + place + "|" + latitude + "|" + longtitude);
         String response = readLine();
         if (response.startsWith("+07")) {
+            JOptionPane.showMessageDialog(null, "Successfully!!! ");
             return true;
         } else if (response.startsWith("-17")) {
-            JOptionPane.showMessageDialog(null, "Placename isn’t in your places list.");
-            return false;
-        } else if (response.startsWith("-27")) {
-            JOptionPane.showMessageDialog(null, "Placename isn’t in the map. Please check again.");
+            JOptionPane.showMessageDialog(null, "Failed!!! ");
             return false;
         }
         return false;
