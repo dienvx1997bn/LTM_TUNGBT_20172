@@ -19,7 +19,7 @@ import javax.swing.JOptionPane;
 
 /**
  *
- * @author HP Zbook 15
+ * @author Nghia Cao
  */
 public class Client {
 

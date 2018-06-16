@@ -14,7 +14,7 @@ import javax.swing.JOptionPane;
 
 /**
  * Create a thread to always listen notification from server 
- * @author HP Zbook 15
+ * @author Nghia Cao
  */
 public class Listener implements Runnable {
 
