@@ -14,7 +14,7 @@ import javax.swing.JOptionPane;
 
 /**
  * Create a thread to always listen notification from server 
- * @author Nghia Cao
+ * @author HP Zbook 15
  */
 public class Listener implements Runnable {
 
@@ -56,6 +56,7 @@ public class Listener implements Runnable {
             int bytes = 0;
             while (running) {
                 bytes = input.read(buff);   //read data from server
+                //System.out.println(bytes);
                 String msg = new String(buff, 0, bytes);    //a string to contain returned data
                 System.out.println("<= " + msg);
                 if (msg.startsWith("NOTI ")) {  //check notificaion from server if it is started with "NOTI "
