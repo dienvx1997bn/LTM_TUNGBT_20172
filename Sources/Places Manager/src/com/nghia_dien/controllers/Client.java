@@ -48,26 +48,6 @@ public class Client {
         this.listener.start();
     }
 
-//    private String readLineOld() throws IOException {
-//        byte[] buff = new byte[2048];
-//        StringBuilder sb = new StringBuilder();
-//        int bytes = 0;
-//
-//        while (true) {
-//            bytes = input.read(buff);
-//            if (bytes < 0) {
-//                break;
-//            }
-//            sb.append(new String(buff, 0, bytes));
-//            if (input.available() <= 0) {
-//                break;
-//            }
-//        }
-//
-//        System.out.println("<= " + sb.toString());
-//        return sb.toString();
-//    }
-
     public void setMsgReceive(String msg) {
         this.messageReceive = msg;
     }
